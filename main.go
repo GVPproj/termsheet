@@ -4,35 +4,25 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/GVPproj/termsheet/types"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// views by int using the iota technique
-
-type view int
-
-const (
-	menuView = iota
-	providersView
-	clientsView
-	invoicesView
-)
-
 type model struct {
-	currentView view
+	currentView types.View
 	cursor      int
 	choices     []string
 }
 
 func initialModel() model {
 	return model{
-		currentView: menuView,
+		currentView: types.MenuView,
 		choices:     []string{"Providers", "Clients", "Invoices"},
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.SetWindowTitle("invogo")
+	return tea.SetWindowTitle("termsheet")
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -42,18 +32,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "esc":
-			m.currentView = menuView
+			m.currentView = types.MenuView
 		case "up", "k":
-			if m.currentView == menuView && m.cursor > 0 {
+			if m.currentView == types.MenuView && m.cursor > 0 {
 				m.cursor--
 			}
 		case "down", "j":
-			if m.currentView == menuView && m.cursor < len(m.choices)-1 {
+			if m.currentView == types.MenuView && m.cursor < len(m.choices)-1 {
 				m.cursor++
 			}
 		case "enter", " ":
-			if m.currentView == menuView {
-				m.currentView = view(m.cursor + 1)
+			if m.currentView == types.MenuView {
+				m.currentView = types.View(m.cursor + 1)
 			}
 		}
 	}
@@ -63,9 +53,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	switch m.currentView {
-	case menuView:
+	case types.MenuView:
 		return m.menuView()
-	case providersView:
+	case types.ProvidersView:
 		return m.providersView()
 	default:
 		return "View not implemented yet\n\nPress ESC to return to menu"
