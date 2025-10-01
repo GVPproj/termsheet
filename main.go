@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/GVPproj/termsheet/types"
+	"github.com/GVPproj/termsheet/views"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -54,36 +55,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	switch m.currentView {
 	case types.MenuView:
-		return m.menuView()
+		return views.RenderMenu(m.cursor, m.choices)
 	case types.ProvidersView:
-		return m.providersView()
+		return views.RenderProviders()
 	default:
 		return "View not implemented yet\n\nPress ESC to return to menu"
 	}
-}
-
-func (m model) menuView() string {
-	s := "Please select a view\n\n"
-
-	for i, choice := range m.choices {
-		cursor := " "
-		if m.cursor == i {
-			cursor = ">"
-		}
-		s += fmt.Sprintf("%s %s\n", cursor, choice)
-	}
-
-	s += "\nPress q to quit."
-	return s
-}
-
-func (m model) providersView() string {
-	s := "PROVIDERS VIEW\n\n"
-	s += "• Provider 1\n"
-	s += "• Provider 2\n"
-	s += "• Provider 3\n\n"
-	s += "Press ESC to return to menu"
-	return s
 }
 
 func main() {
