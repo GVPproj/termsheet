@@ -1,3 +1,4 @@
+// Package models defines the core data structures for invoicing entities.
 package models
 
 import "time"
