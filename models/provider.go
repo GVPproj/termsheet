@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// CreateProvider creates a new provider in the database
 func CreateProvider(name string, address, email, phone *string) (string, error) {
 	if strings.TrimSpace(name) == "" {
 		return "", errors.New("provider name is required")
@@ -31,7 +30,6 @@ func CreateProvider(name string, address, email, phone *string) (string, error) 
 	return providerID, nil
 }
 
-// ListProviders returns all providers from the database
 func ListProviders() ([]Provider, error) {
 	rows, err := db.Query("SELECT id, name, address, email, phone FROM provider")
 	if err != nil {
@@ -51,7 +49,6 @@ func ListProviders() ([]Provider, error) {
 	return providers, rows.Err()
 }
 
-// UpdateProvider updates an existing provider
 func UpdateProvider(providerID, name string, address, email, phone *string) error {
 	if strings.TrimSpace(name) == "" {
 		return errors.New("provider name is required")

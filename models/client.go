@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// CreateClient creates a new client in the database
 func CreateClient(name string, address, email *string) (string, error) {
 	if strings.TrimSpace(name) == "" {
 		return "", errors.New("client name is required")
@@ -30,7 +29,6 @@ func CreateClient(name string, address, email *string) (string, error) {
 	return clientID, nil
 }
 
-// ListClients returns all clients from the database
 func ListClients() ([]Client, error) {
 	rows, err := db.Query("SELECT id, name, address, email FROM client")
 	if err != nil {
@@ -50,7 +48,6 @@ func ListClients() ([]Client, error) {
 	return clients, rows.Err()
 }
 
-// UpdateClient updates an existing client
 func UpdateClient(clientID, name string, address, email *string) error {
 	if strings.TrimSpace(name) == "" {
 		return errors.New("client name is required")

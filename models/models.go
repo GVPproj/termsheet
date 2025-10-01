@@ -3,16 +3,17 @@ package models
 
 import "time"
 
-// Provider represents a service provider (sender of invoices)
 type Provider struct {
-	ID      string
-	Name    string
+	ID   string
+	Name string
+	// we use pointers for optional fields so that they can be NULL
+	// If the database column is NULL, the *string will be nil.
+	// If the database column has a string value, the *string will point to that string.
 	Address *string
 	Email   *string
 	Phone   *string
 }
 
-// Client represents a client receiving invoices
 type Client struct {
 	ID      string
 	Name    string
@@ -20,7 +21,6 @@ type Client struct {
 	Email   *string
 }
 
-// Invoice represents an invoice with provider, client, and payment status
 type Invoice struct {
 	ID          int
 	ProviderID  string
@@ -29,7 +29,6 @@ type Invoice struct {
 	DateCreated time.Time
 }
 
-// InvoiceItem represents a line item on an invoice
 type InvoiceItem struct {
 	ID          int
 	InvoiceID   int

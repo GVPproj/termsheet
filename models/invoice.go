@@ -22,7 +22,6 @@ type InvoiceData struct {
 	Items           []InvoiceItem
 }
 
-// CreateInvoice creates a new invoice
 func CreateInvoice(providerID, clientID string, paid bool) (int, error) {
 	result, err := db.Exec(
 		"INSERT INTO invoice (provider_id, client_id, paid) VALUES (?, ?, ?)",
@@ -42,7 +41,6 @@ func CreateInvoice(providerID, clientID string, paid bool) (int, error) {
 	return int(invoiceID), nil
 }
 
-// UpdateInvoice updates an existing invoice
 func UpdateInvoice(invoiceID int, providerID, clientID string, paid bool) error {
 	result, err := db.Exec(
 		"UPDATE invoice SET provider_id = ?, client_id = ?, paid = ? WHERE id = ?",
@@ -67,14 +65,14 @@ func UpdateInvoice(invoiceID int, providerID, clientID string, paid bool) error 
 	return nil
 }
 
-// ListInvoices returns all invoices with basic information
 func ListInvoices() ([]struct {
 	ID           int
 	ProviderName string
 	ClientName   string
 	DateCreated  time.Time
 	Paid         bool
-}, error) {
+}, error,
+) {
 	rows, err := db.Query(`
 		SELECT
 			i.id,
@@ -117,11 +115,9 @@ func ListInvoices() ([]struct {
 	return invoices, rows.Err()
 }
 
-// GetInvoiceData retrieves complete invoice data including provider, client, and items
 func GetInvoiceData(invoiceID int) (*InvoiceData, error) {
 	var data InvoiceData
 
-	// Get invoice with provider and client details
 	err := db.QueryRow(`
 		SELECT
 			i.id,
@@ -149,7 +145,6 @@ func GetInvoiceData(invoiceID int) (*InvoiceData, error) {
 		return nil, err
 	}
 
-	// Get invoice items
 	rows, err := db.Query(`
 		SELECT id, invoice_id, item_name, amount, cost_per_unit
 		FROM invoice_item
@@ -171,7 +166,6 @@ func GetInvoiceData(invoiceID int) (*InvoiceData, error) {
 	return &data, rows.Err()
 }
 
-// AddInvoiceItem adds an item to an invoice
 func AddInvoiceItem(invoiceID int, itemName string, amount, costPerUnit float64) (int, error) {
 	if strings.TrimSpace(itemName) == "" {
 		return 0, errors.New("item name is required")
