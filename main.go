@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/GVPproj/termsheet/models"
 	"github.com/GVPproj/termsheet/types"
 	"github.com/GVPproj/termsheet/views"
 	tea "github.com/charmbracelet/bubbletea"
@@ -64,6 +66,12 @@ func (m model) View() string {
 }
 
 func main() {
+	// Initialize database
+	if err := models.InitDB(); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer models.CloseDB()
+
 	p := tea.NewProgram(initialModel())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)

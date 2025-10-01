@@ -5,6 +5,7 @@
 *.so
 *.dylib
 termsheet
+termsheet.db
 
 # Test binary, built with `go test -c`
 *.test
