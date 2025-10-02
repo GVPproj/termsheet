@@ -45,7 +45,7 @@ func (m *model) createMenuForm() *huh.Form {
 				// the user's selection, directly updating m.selection in your model struct.
 				Value(&m.selection),
 		),
-	)
+	).WithTheme(views.GetMenuTheme())
 }
 
 func initialModel() *model {

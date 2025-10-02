@@ -8,6 +8,15 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// GetMenuTheme returns a customized theme for the menu form
+func GetMenuTheme() *huh.Theme {
+	t := huh.ThemeCharm()
+	t.Focused.Title = t.Focused.Title.Foreground(lipgloss.Color("#61AFEF"))
+	t.Focused.SelectedOption = t.Focused.SelectedOption.Foreground(lipgloss.Color("#D33682"))
+	t.Focused.SelectSelector = t.Focused.SelectSelector.Foreground(lipgloss.Color("#F255A1"))
+	return t
+}
+
 var (
 	// Adaptive colors for light/dark terminals
 	subtle = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
