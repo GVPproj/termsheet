@@ -166,6 +166,49 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	}
 
+	// When in provider create/edit view, let the form handle messages
+	if m.currentView == types.ProviderCreateView || m.currentView == types.ProviderEditView {
+		form, cmd := m.form.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.form = f
+		}
+
+		// Check if form is completed
+		if m.form.State == huh.StateCompleted {
+			// Handle provider creation/update
+			addressPtr := forms.StringToStringPtr(m.providerAddress)
+			emailPtr := forms.StringToStringPtr(m.providerEmail)
+			phonePtr := forms.StringToStringPtr(m.providerPhone)
+
+			if m.currentView == types.ProviderCreateView {
+				_, err := models.CreateProvider(m.providerName, addressPtr, emailPtr, phonePtr)
+				if err != nil {
+					log.Printf("Error creating provider: %v", err)
+					return m, nil
+				}
+			} else {
+				err := models.UpdateProvider(m.selectedProviderID, m.providerName, addressPtr, emailPtr, phonePtr)
+				if err != nil {
+					log.Printf("Error updating provider: %v", err)
+					return m, nil
+				}
+			}
+
+			// Return to provider list
+			m.currentView = types.ProvidersListView
+			m.selection = ""
+			providerForm, err := views.CreateProviderListForm(&m.selection)
+			if err != nil {
+				log.Printf("Error creating provider form: %v", err)
+				return m, nil
+			}
+			m.form = providerForm
+			return m, m.form.Init()
+		}
+
+		return m, cmd
+	}
+
 	return m, nil
 }
 
