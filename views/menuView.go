@@ -16,7 +16,7 @@ var (
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
 		// gross green test here
-		Foreground(lipgloss.Color("#00FF00")).
+		Foreground(lipgloss.Color("#61AFEF")).
 		MarginBottom(1)
 
 	// Help text styling
@@ -27,7 +27,7 @@ var (
 	// Container styling
 	containerStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#7D56F4")).
+			BorderForeground(lipgloss.Color("#61AFEF")).
 			Padding(1, 2).
 			Width(60)
 )
@@ -40,6 +40,7 @@ func RenderMenu(form *huh.Form) string {
 	b.WriteString("\n\n")
 
 	// Render the form
+	// TODO: pass styles into here
 	b.WriteString(form.View())
 
 	// Render help text
