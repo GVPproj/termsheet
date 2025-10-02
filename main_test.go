@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	"github.com/GVPproj/termsheet/models"
 	"github.com/GVPproj/termsheet/types"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
@@ -31,6 +32,12 @@ func TestFormSelectionBinding(t *testing.T) {
 
 // Test the view switching logic
 func TestViewSwitching(t *testing.T) {
+	// Initialize test database
+	if err := models.InitDB(); err != nil {
+		t.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer models.CloseDB()
+
 	tests := []struct {
 		name         string
 		selection    string
@@ -90,5 +97,82 @@ func TestEscapeReturnsToMenu(t *testing.T) {
 	// Verify form was reset
 	if m.form == nil {
 		t.Error("form should not be nil after returning to menu")
+	}
+}
+
+// Test provider selection loads provider form instead of returning to menu
+func TestProviderSelectionLoadsForm(t *testing.T) {
+	// Initialize test database
+	if err := models.InitDB(); err != nil {
+		t.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer models.CloseDB()
+
+	// Create a test provider
+	_, err := models.CreateProvider("Test Provider", nil, nil, nil)
+	if err != nil {
+		t.Fatalf("Failed to create test provider: %v", err)
+	}
+
+	m := initialModel()
+
+	// Navigate to Providers view
+	m.selection = "Providers"
+	m.form.State = huh.StateCompleted
+	m.Update(nil)
+
+	// Verify we're in ProvidersListView
+	if m.currentView != types.ProvidersListView {
+		t.Fatalf("expected ProvidersListView, got %v", m.currentView)
+	}
+
+	// Get the provider ID from the form options
+	providers, _ := models.ListProviders()
+	if len(providers) == 0 {
+		t.Fatal("expected at least one provider")
+	}
+	providerID := providers[0].ID
+
+	// Select a provider
+	m.selection = providerID
+	m.form.State = huh.StateCompleted
+	m.Update(nil)
+
+	// EXPECTED: Should load provider edit form
+	// ACTUAL: Currently returns to MenuView (this test should fail)
+	if m.currentView == types.MenuView {
+		t.Error("selecting a provider should NOT return to menu, should load provider form")
+	}
+}
+
+// Test "Create New Provider" loads provider form instead of returning to menu
+func TestCreateNewProviderLoadsForm(t *testing.T) {
+	// Initialize test database
+	if err := models.InitDB(); err != nil {
+		t.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer models.CloseDB()
+
+	m := initialModel()
+
+	// Navigate to Providers view
+	m.selection = "Providers"
+	m.form.State = huh.StateCompleted
+	m.Update(nil)
+
+	// Verify we're in ProvidersListView
+	if m.currentView != types.ProvidersListView {
+		t.Fatalf("expected ProvidersListView, got %v", m.currentView)
+	}
+
+	// Select "Create New Provider"
+	m.selection = "CREATE_NEW"
+	m.form.State = huh.StateCompleted
+	m.Update(nil)
+
+	// EXPECTED: Should load provider create form
+	// ACTUAL: Currently returns to MenuView (this test should fail)
+	if m.currentView == types.MenuView {
+		t.Error("selecting 'Create New Provider' should NOT return to menu, should load provider form")
 	}
 }

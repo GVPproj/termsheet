@@ -8,6 +8,7 @@ import (
 	"github.com/GVPproj/termsheet/models"
 	"github.com/GVPproj/termsheet/types"
 	"github.com/GVPproj/termsheet/views"
+	"github.com/GVPproj/termsheet/views/forms"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 )
@@ -20,6 +21,13 @@ type model struct {
 	// this means form as value doesn't get recreated each time
 	form      *huh.Form
 	selection string
+
+	// Provider form fields
+	providerName    string
+	providerAddress string
+	providerEmail   string
+	providerPhone   string
+	selectedProviderID string
 }
 
 // createMenuForm is a method on the model struct
@@ -92,10 +100,66 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.selection {
 			case "Providers":
 				m.currentView = types.ProvidersListView
+				// Create provider list form
+				providerForm, err := views.CreateProviderListForm(&m.selection)
+				if err != nil {
+					log.Printf("Error creating provider form: %v", err)
+					return m, nil
+				}
+				m.form = providerForm
+				return m, m.form.Init()
 			case "Clients":
 				m.currentView = types.ClientsListView
 			case "Invoices":
 				m.currentView = types.InvoicesListView
+			}
+		}
+
+		return m, cmd
+	}
+
+	// When in provider list view, let the form handle messages
+	if m.currentView == types.ProvidersListView {
+		form, cmd := m.form.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.form = f
+		}
+
+		// Check if form is completed
+		if m.form.State == huh.StateCompleted {
+			// Handle selection
+			if m.selection == "CREATE_NEW" {
+				// Navigate to create provider view
+				m.currentView = types.ProviderCreateView
+				m.providerName = ""
+				m.providerAddress = ""
+				m.providerEmail = ""
+				m.providerPhone = ""
+				m.form = forms.NewProviderForm(&m.providerName, &m.providerAddress, &m.providerEmail, &m.providerPhone)
+				return m, m.form.Init()
+			} else {
+				// Navigate to edit provider view
+				m.selectedProviderID = m.selection
+				// Get provider data
+				providers, err := models.ListProviders()
+				if err != nil {
+					log.Printf("Error loading provider: %v", err)
+					return m, nil
+				}
+				var selectedProvider *models.Provider
+				for _, p := range providers {
+					if p.ID == m.selectedProviderID {
+						selectedProvider = &p
+						break
+					}
+				}
+				if selectedProvider == nil {
+					log.Printf("Provider not found: %s", m.selectedProviderID)
+					return m, nil
+				}
+				m.currentView = types.ProviderEditView
+				m.form = forms.NewProviderFormWithData(*selectedProvider, &m.providerName, &m.providerAddress, &m.providerEmail, &m.providerPhone)
+				return m, m.form.Init()
 			}
 		}
 
@@ -110,7 +174,11 @@ func (m *model) View() string {
 	case types.MenuView:
 		return views.RenderMenu(m.form)
 	case types.ProvidersListView:
-		return views.RenderProviders()
+		return views.RenderProviders(m.form)
+	case types.ProviderCreateView:
+		return views.RenderProviders(m.form) // Reuse the same renderer with the form
+	case types.ProviderEditView:
+		return views.RenderProviders(m.form) // Reuse the same renderer with the form
 	case types.ClientsListView:
 		return views.RenderClients()
 	case types.InvoicesListView:

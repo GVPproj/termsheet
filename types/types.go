@@ -6,6 +6,8 @@ type View int
 const (
 	MenuView View = iota
 	ProvidersListView
+	ProviderCreateView
+	ProviderEditView
 	ClientsListView
 	InvoicesListView
 )
