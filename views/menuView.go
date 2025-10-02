@@ -24,9 +24,8 @@ var (
 	// Title styling
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
-		// gross green test here
-		Foreground(lipgloss.Color("#61AFEF")).
-		MarginBottom(1)
+			Foreground(lipgloss.Color("#61AFEF")).
+			MarginBottom(1)
 
 	// Help text styling
 	helpStyle = lipgloss.NewStyle().
