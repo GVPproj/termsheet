@@ -9,23 +9,44 @@ import (
 	"github.com/GVPproj/termsheet/types"
 	"github.com/GVPproj/termsheet/views"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
 )
 
 type model struct {
 	currentView types.View
 	cursor      int
 	choices     []string
+	form        *huh.Form
+	selection   string
+}
+
+func (m *model) createMenuForm() *huh.Form {
+	return huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Please select a view").
+				Options(
+					huh.NewOption("Providers", "Providers"),
+					huh.NewOption("Clients", "Clients"),
+					huh.NewOption("Invoices", "Invoices"),
+				).
+				Value(&m.selection),
+		),
+	)
 }
 
 func initialModel() model {
-	return model{
+	m := model{
 		currentView: types.MenuView,
 		choices:     []string{"Providers", "Clients", "Invoices"},
 	}
+
+	m.form = m.createMenuForm()
+	return m
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.SetWindowTitle("termsheet")
+	return tea.Batch(tea.SetWindowTitle("termsheet"), m.form.Init())
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -35,20 +56,37 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "esc":
-			m.currentView = types.MenuView
-		case "up", "k":
-			if m.currentView == types.MenuView && m.cursor > 0 {
-				m.cursor--
-			}
-		case "down", "j":
-			if m.currentView == types.MenuView && m.cursor < len(m.choices)-1 {
-				m.cursor++
-			}
-		case "enter", " ":
-			if m.currentView == types.MenuView {
-				m.currentView = types.View(m.cursor + 1)
+			if m.currentView != types.MenuView {
+				// Reset form when returning to menu
+				m.currentView = types.MenuView
+				m.selection = ""
+				m.form = m.createMenuForm()
+				return m, m.form.Init()
 			}
 		}
+	}
+
+	// When in menu view, let the form handle messages
+	if m.currentView == types.MenuView {
+		form, cmd := m.form.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.form = f
+		}
+
+		// Check if form is completed
+		if m.form.State == huh.StateCompleted {
+			// Map selection to view
+			switch m.selection {
+			case "Providers":
+				m.currentView = types.ProvidersView
+			case "Clients":
+				m.currentView = types.ClientsView
+			case "Invoices":
+				m.currentView = types.InvoicesView
+			}
+		}
+
+		return m, cmd
 	}
 
 	return m, nil
@@ -57,7 +95,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	switch m.currentView {
 	case types.MenuView:
-		return views.RenderMenu(m.cursor, m.choices)
+		return views.RenderMenu(m.form)
 	case types.ProvidersView:
 		return views.RenderProviders()
 	default:

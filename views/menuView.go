@@ -1,19 +1,48 @@
 // Package views collects the various app state views in the Termsheet app
 package views
 
-import "fmt"
+import (
+	"strings"
 
-func RenderMenu(cursor int, choices []string) string {
-	s := "Please select a view\n\n"
+	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/lipgloss"
+)
 
-	for i, choice := range choices {
-		cursorStr := " "
-		if cursor == i {
-			cursorStr = ">"
-		}
-		s += fmt.Sprintf("%s %s\n", cursorStr, choice)
-	}
+var (
+	// Adaptive colors for light/dark terminals
+	subtle = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
 
-	s += "\nPress q to quit."
-	return s
+	// Title styling
+	titleStyle = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#7D56F4")).
+		MarginBottom(1)
+
+	// Help text styling
+	helpStyle = lipgloss.NewStyle().
+		Foreground(subtle).
+		MarginTop(1)
+
+	// Container styling
+	containerStyle = lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#7D56F4")).
+		Padding(1, 2)
+)
+
+func RenderMenu(form *huh.Form) string {
+	var b strings.Builder
+
+	// Render title
+	b.WriteString(titleStyle.Render("Termsheet"))
+	b.WriteString("\n\n")
+
+	// Render the form
+	b.WriteString(form.View())
+
+	// Render help text
+	b.WriteString(helpStyle.Render("\nPress q to quit"))
+
+	// Wrap in container
+	return containerStyle.Render(b.String())
 }
