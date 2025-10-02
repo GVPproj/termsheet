@@ -16,27 +16,40 @@ type model struct {
 	currentView types.View
 	cursor      int
 	choices     []string
-	form        *huh.Form
-	selection   string
+	// this Pointer allows form state to be modified (selection, focus, etc.)
+	// this means form as value doesn't get recreated each time
+	form      *huh.Form
+	selection string
 }
 
+// createMenuForm is a method on the model struct
+// The (m *model) part is called a receiver - it makes createMenuForm() a method on the model struct
 func (m *model) createMenuForm() *huh.Form {
 	return huh.NewForm(
 		huh.NewGroup(
 			huh.NewSelect[string]().
+				// .Title() - Sets the prompt text shown to the user
 				Title("Please select a view").
+				// .Options() - Defines the selectable choices (label + value pairs)
 				Options(
 					huh.NewOption("Providers", "Providers"),
 					huh.NewOption("Clients", "Clients"),
 					huh.NewOption("Invoices", "Invoices"),
 				).
+				// .Value(&m.selection) - Binds the selected value to the m.selection field on the model struct
+				// using a pointer to that variable.
+				// Why a Pointer is Needed for Modification: If Value() were given just m.selection (the value itself, not its address),
+				// it would be working with a copy of the string. Any changes it made to that copy
+				// would not affect the original m.selection in your model.
+				// By giving it a pointer (&m.selection), huh.Form knows exactly where in memory to store
+				// the user's selection, directly updating m.selection in your model struct.
 				Value(&m.selection),
 		),
 	)
 }
 
-func initialModel() model {
-	m := model{
+func initialModel() *model {
+	m := &model{
 		currentView: types.MenuView,
 		choices:     []string{"Providers", "Clients", "Invoices"},
 	}
@@ -45,11 +58,11 @@ func initialModel() model {
 	return m
 }
 
-func (m model) Init() tea.Cmd {
+func (m *model) Init() tea.Cmd {
 	return tea.Batch(tea.SetWindowTitle("termsheet"), m.form.Init())
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -92,7 +105,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) View() string {
+func (m *model) View() string {
 	switch m.currentView {
 	case types.MenuView:
 		return views.RenderMenu(m.form)
