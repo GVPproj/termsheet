@@ -111,6 +111,8 @@ func (m *model) View() string {
 		return views.RenderMenu(m.form)
 	case types.ProvidersView:
 		return views.RenderProviders()
+	case types.ClientsView:
+		return views.RenderClients()
 	default:
 		return "View not implemented yet\n\nPress ESC to return to menu"
 	}

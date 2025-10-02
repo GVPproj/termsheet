@@ -14,20 +14,22 @@ var (
 
 	// Title styling
 	titleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#7D56F4")).
+			Bold(true).
+		// gross green test here
+		Foreground(lipgloss.Color("#00FF00")).
 		MarginBottom(1)
 
 	// Help text styling
 	helpStyle = lipgloss.NewStyle().
-		Foreground(subtle).
-		MarginTop(1)
+			Foreground(subtle).
+			MarginTop(1)
 
 	// Container styling
 	containerStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#7D56F4")).
-		Padding(1, 2)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#7D56F4")).
+			Padding(1, 2).
+			Width(60)
 )
 
 func RenderMenu(form *huh.Form) string {
