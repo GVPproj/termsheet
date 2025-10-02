@@ -39,17 +39,17 @@ func TestViewSwitching(t *testing.T) {
 		{
 			name:         "Providers selection",
 			selection:    "Providers",
-			expectedView: types.ProvidersView,
+			expectedView: types.ProvidersListView,
 		},
 		{
 			name:         "Clients selection",
 			selection:    "Clients",
-			expectedView: types.ClientsView,
+			expectedView: types.ClientsListView,
 		},
 		{
 			name:         "Invoices selection",
 			selection:    "Invoices",
-			expectedView: types.InvoicesView,
+			expectedView: types.InvoicesListView,
 		},
 	}
 
@@ -77,7 +77,7 @@ func TestEscapeReturnsToMenu(t *testing.T) {
 	m := initialModel()
 
 	// Set to a different view
-	m.currentView = types.ProvidersView
+	m.currentView = types.ProvidersListView
 
 	// Send ESC
 	m.Update(tea.KeyMsg{Type: tea.KeyEscape})

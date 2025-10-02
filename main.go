@@ -91,11 +91,11 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Map selection to view
 			switch m.selection {
 			case "Providers":
-				m.currentView = types.ProvidersView
+				m.currentView = types.ProvidersListView
 			case "Clients":
-				m.currentView = types.ClientsView
+				m.currentView = types.ClientsListView
 			case "Invoices":
-				m.currentView = types.InvoicesView
+				m.currentView = types.InvoicesListView
 			}
 		}
 
@@ -109,10 +109,12 @@ func (m *model) View() string {
 	switch m.currentView {
 	case types.MenuView:
 		return views.RenderMenu(m.form)
-	case types.ProvidersView:
+	case types.ProvidersListView:
 		return views.RenderProviders()
-	case types.ClientsView:
+	case types.ClientsListView:
 		return views.RenderClients()
+	case types.InvoicesListView:
+		return views.RenderInvoices()
 	default:
 		return "View not implemented yet\n\nPress ESC to return to menu"
 	}
