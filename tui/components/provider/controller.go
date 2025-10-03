@@ -12,8 +12,8 @@ import (
 	"github.com/charmbracelet/huh"
 )
 
-// Component manages provider-related state and behavior
-type Component struct {
+// Controller manages provider-related state and behavior
+type Controller struct {
 	// Form state
 	form      *huh.Form
 	selection string
@@ -28,19 +28,13 @@ type Component struct {
 	selectedID string
 }
 
-// ViewTransition represents a request to change views
-type ViewTransition struct {
-	NewView types.View
-	Form    *huh.Form
-}
-
-// NewComponent creates a new provider component
-func NewComponent() *Component {
-	return &Component{}
+// NewController creates a new provider controller
+func NewController() *Controller {
+	return &Controller{}
 }
 
 // InitListView initializes the provider list view
-func (c *Component) InitListView() (*huh.Form, error) {
+func (c *Controller) InitListView() (*huh.Form, error) {
 	c.selection = ""
 	providerForm, err := views.CreateProviderListForm(&c.selection, -1)
 	if err != nil {
@@ -51,7 +45,7 @@ func (c *Component) InitListView() (*huh.Form, error) {
 }
 
 // Update handles provider-related messages and returns view transition if needed
-func (c *Component) Update(msg tea.Msg, currentView types.View) (*ViewTransition, tea.Cmd) {
+func (c *Controller) Update(msg tea.Msg, currentView types.View) (*types.ViewTransition, tea.Cmd) {
 	switch currentView {
 	case types.ProvidersListView:
 		return c.handleListView(msg)
@@ -62,7 +56,7 @@ func (c *Component) Update(msg tea.Msg, currentView types.View) (*ViewTransition
 }
 
 // handleListView manages the provider list view logic
-func (c *Component) handleListView(msg tea.Msg) (*ViewTransition, tea.Cmd) {
+func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd) {
 	// Handle delete key before passing to form
 	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "d" {
 		if c.selection != "" && c.selection != "CREATE_NEW" {
@@ -95,7 +89,7 @@ func (c *Component) handleListView(msg tea.Msg) (*ViewTransition, tea.Cmd) {
 			// Navigate to create provider view
 			c.resetFormFields()
 			c.form = forms.NewProviderForm(&c.name, &c.address, &c.email, &c.phone)
-			return &ViewTransition{
+			return &types.ViewTransition{
 				NewView: types.ProviderCreateView,
 				Form:    c.form,
 			}, c.form.Init()
@@ -120,7 +114,7 @@ func (c *Component) handleListView(msg tea.Msg) (*ViewTransition, tea.Cmd) {
 				return nil, nil
 			}
 			c.form = forms.NewProviderFormWithData(*selectedProvider, &c.name, &c.address, &c.email, &c.phone)
-			return &ViewTransition{
+			return &types.ViewTransition{
 				NewView: types.ProviderEditView,
 				Form:    c.form,
 			}, c.form.Init()
@@ -131,7 +125,7 @@ func (c *Component) handleListView(msg tea.Msg) (*ViewTransition, tea.Cmd) {
 }
 
 // handleFormView manages create and edit form views
-func (c *Component) handleFormView(msg tea.Msg, currentView types.View) (*ViewTransition, tea.Cmd) {
+func (c *Controller) handleFormView(msg tea.Msg, currentView types.View) (*types.ViewTransition, tea.Cmd) {
 	// Update form
 	form, cmd := c.form.Update(msg)
 	if f, ok := form.(*huh.Form); ok {
@@ -175,7 +169,7 @@ func (c *Component) handleFormView(msg tea.Msg, currentView types.View) (*ViewTr
 			return nil, nil
 		}
 		c.form = providerForm
-		return &ViewTransition{
+		return &types.ViewTransition{
 			NewView: types.ProvidersListView,
 			Form:    c.form,
 		}, c.form.Init()
@@ -185,7 +179,7 @@ func (c *Component) handleFormView(msg tea.Msg, currentView types.View) (*ViewTr
 }
 
 // resetFormFields clears all form field values
-func (c *Component) resetFormFields() {
+func (c *Controller) resetFormFields() {
 	c.name = ""
 	c.address = ""
 	c.email = ""
@@ -193,6 +187,6 @@ func (c *Component) resetFormFields() {
 }
 
 // GetForm returns the current form
-func (c *Component) GetForm() *huh.Form {
+func (c *Controller) GetForm() *huh.Form {
 	return c.form
 }

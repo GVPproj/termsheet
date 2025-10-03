@@ -23,7 +23,7 @@ type model struct {
 	selection string
 
 	// Provider component
-	providerComponent *provider.Component
+	providerComponent *provider.Controller
 }
 
 // createMenuForm is a method on the model struct
@@ -56,7 +56,7 @@ func initialModel() *model {
 	m := &model{
 		currentView:       types.MenuView,
 		choices:           []string{"Providers", "Clients", "Invoices"},
-		providerComponent: provider.NewComponent(),
+		providerComponent: provider.NewController(),
 	}
 
 	m.form = m.createMenuForm()

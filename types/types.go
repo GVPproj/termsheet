@@ -1,6 +1,8 @@
 // Package types defines the view constants used for navigation in the termsheet application.
 package types
 
+import "github.com/charmbracelet/huh"
+
 type View int
 
 const (
@@ -11,3 +13,9 @@ const (
 	ClientsListView
 	InvoicesListView
 )
+
+// ViewTransition represents a request to change views
+type ViewTransition struct {
+	NewView View
+	Form    *huh.Form
+}
