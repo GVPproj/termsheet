@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/charmbracelet/huh"
@@ -20,27 +19,13 @@ func TestCreateProviderWithFormInput(t *testing.T) {
 		phone   string
 	)
 
-	// Create a form that binds to our variables
+	// Create a huh form for testing
 	form := huh.NewForm(
 		huh.NewGroup(
-			huh.NewInput().
-				Title("Provider Name").
-				Value(&name).
-				Validate(func(s string) error {
-					if s == "" {
-						return errors.New("provider name is required")
-					}
-					return nil
-				}),
-			huh.NewInput().
-				Title("Address").
-				Value(&address),
-			huh.NewInput().
-				Title("Email").
-				Value(&email),
-			huh.NewInput().
-				Title("Phone").
-				Value(&phone),
+			huh.NewInput().Title("Provider Name").Value(&name),
+			huh.NewInput().Title("Address").Value(&address),
+			huh.NewInput().Title("Email").Value(&email),
+			huh.NewInput().Title("Phone").Value(&phone),
 		),
 	)
 
@@ -59,6 +44,7 @@ func TestCreateProviderWithFormInput(t *testing.T) {
 	}
 
 	// Use the form data to create a provider
+	// Convert empty strings to nil pointers, otherwise return pointer to value
 	var addressPtr, emailPtr, phonePtr *string
 	if address != "" {
 		addressPtr = &address
@@ -115,24 +101,10 @@ func TestCreateProviderWithFormInputOptionalFields(t *testing.T) {
 
 	form := huh.NewForm(
 		huh.NewGroup(
-			huh.NewInput().
-				Title("Provider Name").
-				Value(&name).
-				Validate(func(s string) error {
-					if s == "" {
-						return errors.New("provider name is required")
-					}
-					return nil
-				}),
-			huh.NewInput().
-				Title("Address").
-				Value(&address),
-			huh.NewInput().
-				Title("Email").
-				Value(&email),
-			huh.NewInput().
-				Title("Phone").
-				Value(&phone),
+			huh.NewInput().Title("Provider Name").Value(&name),
+			huh.NewInput().Title("Address").Value(&address),
+			huh.NewInput().Title("Email").Value(&email),
+			huh.NewInput().Title("Phone").Value(&phone),
 		),
 	)
 

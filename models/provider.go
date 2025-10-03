@@ -77,3 +77,21 @@ func UpdateProvider(providerID, name string, address, email, phone *string) erro
 
 	return nil
 }
+
+func DeleteProvider(providerID string) error {
+	result, err := db.Exec("DELETE FROM provider WHERE id = ?", providerID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}

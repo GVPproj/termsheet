@@ -39,25 +39,25 @@ func NewProviderForm(name, address, email, phone *string) *huh.Form {
 func NewProviderFormWithData(provider models.Provider, name, address, email, phone *string) *huh.Form {
 	// Pre-populate the bound variables with existing data
 	*name = provider.Name
-	*address = StringPtrToString(provider.Address)
-	*email = StringPtrToString(provider.Email)
-	*phone = StringPtrToString(provider.Phone)
+
+	// Convert *string to string, empty if nil
+	if provider.Address != nil {
+		*address = *provider.Address
+	} else {
+		*address = ""
+	}
+
+	if provider.Email != nil {
+		*email = *provider.Email
+	} else {
+		*email = ""
+	}
+
+	if provider.Phone != nil {
+		*phone = *provider.Phone
+	} else {
+		*phone = ""
+	}
 
 	return NewProviderForm(name, address, email, phone)
-}
-
-// StringPtrToString converts a *string to string, returning empty string if nil
-func StringPtrToString(ptr *string) string {
-	if ptr == nil {
-		return ""
-	}
-	return *ptr
-}
-
-// StringToStringPtr converts a non-empty string to *string, returning nil for empty strings
-func StringToStringPtr(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
 }

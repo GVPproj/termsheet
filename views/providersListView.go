@@ -26,7 +26,8 @@ var (
 )
 
 // CreateProviderListForm creates a form for selecting or creating providers
-func CreateProviderListForm(selection *string) (*huh.Form, error) {
+// If preserveIndex >= 0, it attempts to select the item at that index
+func CreateProviderListForm(selection *string, preserveIndex int) (*huh.Form, error) {
 	providers, err := models.ListProviders()
 	if err != nil {
 		return nil, err
@@ -46,6 +47,17 @@ func CreateProviderListForm(selection *string) (*huh.Form, error) {
 
 	// Add "Create New Provider" option
 	options = append(options, huh.NewOption("+ Create New Provider", "CREATE_NEW"))
+
+	// If preserveIndex is specified, set selection to that index
+	// Adjust if out of bounds (deleted last item)
+	if preserveIndex >= 0 {
+		if preserveIndex >= len(options) {
+			preserveIndex = len(options) - 1
+		}
+		if preserveIndex >= 0 && preserveIndex < len(options) {
+			*selection = options[preserveIndex].Value
+		}
+	}
 
 	form := huh.NewForm(
 		huh.NewGroup(
@@ -71,8 +83,39 @@ func RenderProviders(form *huh.Form) string {
 	b.WriteString(form.View())
 
 	// Render help text
-	b.WriteString(helpStyle.Render("\n\nPress ESC to return to menu"))
+	b.WriteString(helpStyle.Render("\n\nPress 'd' to delete | ESC to return to menu"))
 
 	// Wrap in container
 	return providerContainerStyle.Render(b.String())
+}
+
+// DeleteSelectedProvider deletes the provider with the given ID and returns the index to preserve
+func DeleteSelectedProvider(providerID string) (int, error) {
+	if providerID == "" || providerID == "CREATE_NEW" {
+		return -1, fmt.Errorf("invalid provider selection")
+	}
+
+	// Get current providers to find the index before deletion
+	providers, err := models.ListProviders()
+	if err != nil {
+		return -1, err
+	}
+
+	// Find index of provider being deleted
+	deletedIndex := -1
+	for i, p := range providers {
+		if p.ID == providerID {
+			deletedIndex = i
+			break
+		}
+	}
+
+	// Delete the provider
+	if err := models.DeleteProvider(providerID); err != nil {
+		return -1, err
+	}
+
+	// Return the index where cursor should be after deletion
+	// (same index will select next item, or previous if last was deleted)
+	return deletedIndex, nil
 }

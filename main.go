@@ -101,7 +101,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "Providers":
 				m.currentView = types.ProvidersListView
 				// Create provider list form
-				providerForm, err := views.CreateProviderListForm(&m.selection)
+				providerForm, err := views.CreateProviderListForm(&m.selection, -1)
 				if err != nil {
 					log.Printf("Error creating provider form: %v", err)
 					return m, nil
@@ -120,6 +120,26 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// When in provider list view, let the form handle messages
 	if m.currentView == types.ProvidersListView {
+		// Handle delete key before passing to form
+		if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "d" {
+			if m.selection != "" && m.selection != "CREATE_NEW" {
+				preserveIndex, err := views.DeleteSelectedProvider(m.selection)
+				if err != nil {
+					log.Printf("Error deleting provider: %v", err)
+				} else {
+					// Refresh the provider list, preserving cursor position
+					m.selection = ""
+					providerForm, err := views.CreateProviderListForm(&m.selection, preserveIndex)
+					if err != nil {
+						log.Printf("Error refreshing provider list: %v", err)
+						return m, nil
+					}
+					m.form = providerForm
+					return m, m.form.Init()
+				}
+			}
+		}
+
 		form, cmd := m.form.Update(msg)
 		if f, ok := form.(*huh.Form); ok {
 			m.form = f
@@ -176,9 +196,17 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Check if form is completed
 		if m.form.State == huh.StateCompleted {
 			// Handle provider creation/update
-			addressPtr := forms.StringToStringPtr(m.providerAddress)
-			emailPtr := forms.StringToStringPtr(m.providerEmail)
-			phonePtr := forms.StringToStringPtr(m.providerPhone)
+			// Convert empty strings to nil pointers, otherwise return pointer to value
+			var addressPtr, emailPtr, phonePtr *string
+			if m.providerAddress != "" {
+				addressPtr = &m.providerAddress
+			}
+			if m.providerEmail != "" {
+				emailPtr = &m.providerEmail
+			}
+			if m.providerPhone != "" {
+				phonePtr = &m.providerPhone
+			}
 
 			if m.currentView == types.ProviderCreateView {
 				_, err := models.CreateProvider(m.providerName, addressPtr, emailPtr, phonePtr)
@@ -197,7 +225,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Return to provider list
 			m.currentView = types.ProvidersListView
 			m.selection = ""
-			providerForm, err := views.CreateProviderListForm(&m.selection)
+			providerForm, err := views.CreateProviderListForm(&m.selection, -1)
 			if err != nil {
 				log.Printf("Error creating provider form: %v", err)
 				return m, nil
