@@ -11,18 +11,18 @@ import (
 
 var (
 	providerTitleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#61AFEF")).
-		MarginBottom(1)
+				Bold(true).
+				Foreground(lipgloss.Color("#61AFEF")).
+				MarginBottom(1)
 
 	providerItemStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#98C379"))
+				Foreground(lipgloss.Color("#98C379"))
 
 	providerContainerStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#61AFEF")).
-		Padding(1, 2).
-		Width(60)
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#61AFEF")).
+				Padding(1, 2).
+				Width(60)
 )
 
 // CreateProviderListForm creates a form for selecting or creating providers
@@ -38,7 +38,7 @@ func CreateProviderListForm(selection *string, preserveIndex int) (*huh.Form, er
 
 	// Add existing providers
 	for _, p := range providers {
-		label := fmt.Sprintf("%s", p.Name)
+		label := p.Name
 		if p.Email != nil {
 			label += fmt.Sprintf(" (%s)", *p.Email)
 		}

@@ -1,3 +1,4 @@
+// Package storage handles local sqlite db creation and CRUD operations
 package storage
 
 import (
