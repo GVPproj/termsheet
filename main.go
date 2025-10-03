@@ -5,10 +5,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/GVPproj/termsheet/models"
+	"github.com/GVPproj/termsheet/components/provider"
+	"github.com/GVPproj/termsheet/storage"
 	"github.com/GVPproj/termsheet/types"
 	"github.com/GVPproj/termsheet/views"
-	"github.com/GVPproj/termsheet/views/forms"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 )
@@ -22,12 +22,8 @@ type model struct {
 	form      *huh.Form
 	selection string
 
-	// Provider form fields
-	providerName    string
-	providerAddress string
-	providerEmail   string
-	providerPhone   string
-	selectedProviderID string
+	// Provider component
+	providerComponent *provider.Component
 }
 
 // createMenuForm is a method on the model struct
@@ -58,8 +54,9 @@ func (m *model) createMenuForm() *huh.Form {
 
 func initialModel() *model {
 	m := &model{
-		currentView: types.MenuView,
-		choices:     []string{"Providers", "Clients", "Invoices"},
+		currentView:       types.MenuView,
+		choices:           []string{"Providers", "Clients", "Invoices"},
+		providerComponent: provider.NewComponent(),
 	}
 
 	m.form = m.createMenuForm()
@@ -100,8 +97,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.selection {
 			case "Providers":
 				m.currentView = types.ProvidersListView
-				// Create provider list form
-				providerForm, err := views.CreateProviderListForm(&m.selection, -1)
+				// Initialize provider list form
+				providerForm, err := m.providerComponent.InitListView()
 				if err != nil {
 					log.Printf("Error creating provider form: %v", err)
 					return m, nil
@@ -118,122 +115,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	}
 
-	// When in provider list view, let the form handle messages
-	if m.currentView == types.ProvidersListView {
-		// Handle delete key before passing to form
-		if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "d" {
-			if m.selection != "" && m.selection != "CREATE_NEW" {
-				preserveIndex, err := views.DeleteSelectedProvider(m.selection)
-				if err != nil {
-					log.Printf("Error deleting provider: %v", err)
-				} else {
-					// Refresh the provider list, preserving cursor position
-					m.selection = ""
-					providerForm, err := views.CreateProviderListForm(&m.selection, preserveIndex)
-					if err != nil {
-						log.Printf("Error refreshing provider list: %v", err)
-						return m, nil
-					}
-					m.form = providerForm
-					return m, m.form.Init()
-				}
-			}
+	// Delegate to provider component for provider-related views
+	if m.currentView == types.ProvidersListView ||
+		m.currentView == types.ProviderCreateView ||
+		m.currentView == types.ProviderEditView {
+		transition, cmd := m.providerComponent.Update(msg, m.currentView)
+		if transition != nil {
+			m.currentView = transition.NewView
+			m.form = transition.Form
+			return m, cmd
 		}
-
-		form, cmd := m.form.Update(msg)
-		if f, ok := form.(*huh.Form); ok {
-			m.form = f
-		}
-
-		// Check if form is completed
-		if m.form.State == huh.StateCompleted {
-			// Handle selection
-			if m.selection == "CREATE_NEW" {
-				// Navigate to create provider view
-				m.currentView = types.ProviderCreateView
-				m.providerName = ""
-				m.providerAddress = ""
-				m.providerEmail = ""
-				m.providerPhone = ""
-				m.form = forms.NewProviderForm(&m.providerName, &m.providerAddress, &m.providerEmail, &m.providerPhone)
-				return m, m.form.Init()
-			} else {
-				// Navigate to edit provider view
-				m.selectedProviderID = m.selection
-				// Get provider data
-				providers, err := models.ListProviders()
-				if err != nil {
-					log.Printf("Error loading provider: %v", err)
-					return m, nil
-				}
-				var selectedProvider *models.Provider
-				for _, p := range providers {
-					if p.ID == m.selectedProviderID {
-						selectedProvider = &p
-						break
-					}
-				}
-				if selectedProvider == nil {
-					log.Printf("Provider not found: %s", m.selectedProviderID)
-					return m, nil
-				}
-				m.currentView = types.ProviderEditView
-				m.form = forms.NewProviderFormWithData(*selectedProvider, &m.providerName, &m.providerAddress, &m.providerEmail, &m.providerPhone)
-				return m, m.form.Init()
-			}
-		}
-
-		return m, cmd
-	}
-
-	// When in provider create/edit view, let the form handle messages
-	if m.currentView == types.ProviderCreateView || m.currentView == types.ProviderEditView {
-		form, cmd := m.form.Update(msg)
-		if f, ok := form.(*huh.Form); ok {
-			m.form = f
-		}
-
-		// Check if form is completed
-		if m.form.State == huh.StateCompleted {
-			// Handle provider creation/update
-			// Convert empty strings to nil pointers, otherwise return pointer to value
-			var addressPtr, emailPtr, phonePtr *string
-			if m.providerAddress != "" {
-				addressPtr = &m.providerAddress
-			}
-			if m.providerEmail != "" {
-				emailPtr = &m.providerEmail
-			}
-			if m.providerPhone != "" {
-				phonePtr = &m.providerPhone
-			}
-
-			if m.currentView == types.ProviderCreateView {
-				_, err := models.CreateProvider(m.providerName, addressPtr, emailPtr, phonePtr)
-				if err != nil {
-					log.Printf("Error creating provider: %v", err)
-					return m, nil
-				}
-			} else {
-				err := models.UpdateProvider(m.selectedProviderID, m.providerName, addressPtr, emailPtr, phonePtr)
-				if err != nil {
-					log.Printf("Error updating provider: %v", err)
-					return m, nil
-				}
-			}
-
-			// Return to provider list
-			m.currentView = types.ProvidersListView
-			m.selection = ""
-			providerForm, err := views.CreateProviderListForm(&m.selection, -1)
-			if err != nil {
-				log.Printf("Error creating provider form: %v", err)
-				return m, nil
-			}
-			m.form = providerForm
-			return m, m.form.Init()
-		}
-
+		// Update form reference from component
+		m.form = m.providerComponent.GetForm()
 		return m, cmd
 	}
 
@@ -261,10 +154,10 @@ func (m *model) View() string {
 
 func main() {
 	// Initialize database
-	if err := models.InitDB(); err != nil {
+	if err := storage.InitDB(); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
-	defer models.CloseDB()
+	defer storage.CloseDB()
 
 	p := tea.NewProgram(initialModel())
 	if _, err := p.Run(); err != nil {

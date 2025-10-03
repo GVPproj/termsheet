@@ -1,10 +1,11 @@
-package models
+package storage
 
 import (
 	"database/sql"
 	"errors"
 	"strings"
 
+	"github.com/GVPproj/termsheet/models"
 	"github.com/google/uuid"
 )
 
@@ -29,16 +30,16 @@ func CreateClient(name string, address, email *string) (string, error) {
 	return clientID, nil
 }
 
-func ListClients() ([]Client, error) {
+func ListClients() ([]models.Client, error) {
 	rows, err := db.Query("SELECT id, name, address, email FROM client")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var clients []Client
+	var clients []models.Client
 	for rows.Next() {
-		var c Client
+		var c models.Client
 		if err := rows.Scan(&c.ID, &c.Name, &c.Address, &c.Email); err != nil {
 			return nil, err
 		}

@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/GVPproj/termsheet/models"
+	"github.com/GVPproj/termsheet/storage"
 	"github.com/GVPproj/termsheet/types"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
@@ -33,10 +33,10 @@ func TestFormSelectionBinding(t *testing.T) {
 // Test the view switching logic
 func TestViewSwitching(t *testing.T) {
 	// Initialize test database
-	if err := models.InitDB(); err != nil {
+	if err := storage.InitDB(); err != nil {
 		t.Fatalf("Failed to initialize database: %v", err)
 	}
-	defer models.CloseDB()
+	defer storage.CloseDB()
 
 	tests := []struct {
 		name         string
@@ -103,13 +103,13 @@ func TestEscapeReturnsToMenu(t *testing.T) {
 // Test provider selection loads provider form instead of returning to menu
 func TestProviderSelectionLoadsForm(t *testing.T) {
 	// Initialize test database
-	if err := models.InitDB(); err != nil {
+	if err := storage.InitDB(); err != nil {
 		t.Fatalf("Failed to initialize database: %v", err)
 	}
-	defer models.CloseDB()
+	defer storage.CloseDB()
 
 	// Create a test provider
-	_, err := models.CreateProvider("Test Provider", nil, nil, nil)
+	_, err := storage.CreateProvider("Test Provider", nil, nil, nil)
 	if err != nil {
 		t.Fatalf("Failed to create test provider: %v", err)
 	}
@@ -127,7 +127,7 @@ func TestProviderSelectionLoadsForm(t *testing.T) {
 	}
 
 	// Get the provider ID from the form options
-	providers, _ := models.ListProviders()
+	providers, _ := storage.ListProviders()
 	if len(providers) == 0 {
 		t.Fatal("expected at least one provider")
 	}
@@ -148,10 +148,10 @@ func TestProviderSelectionLoadsForm(t *testing.T) {
 // Test "Create New Provider" loads provider form instead of returning to menu
 func TestCreateNewProviderLoadsForm(t *testing.T) {
 	// Initialize test database
-	if err := models.InitDB(); err != nil {
+	if err := storage.InitDB(); err != nil {
 		t.Fatalf("Failed to initialize database: %v", err)
 	}
-	defer models.CloseDB()
+	defer storage.CloseDB()
 
 	m := initialModel()
 

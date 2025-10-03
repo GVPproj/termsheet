@@ -1,26 +1,13 @@
-package models
+package storage
 
 import (
 	"database/sql"
 	"errors"
 	"strings"
 	"time"
-)
 
-// InvoiceData contains complete invoice information including provider and client details
-type InvoiceData struct {
-	InvoiceID       int
-	DateCreated     time.Time
-	Paid            bool
-	ProviderName    string
-	ProviderAddress *string
-	ProviderEmail   *string
-	ProviderPhone   *string
-	ClientName      string
-	ClientAddress   *string
-	ClientEmail     *string
-	Items           []InvoiceItem
-}
+	"github.com/GVPproj/termsheet/models"
+)
 
 func CreateInvoice(providerID, clientID string, paid bool) (int, error) {
 	result, err := db.Exec(
@@ -115,8 +102,8 @@ func ListInvoices() ([]struct {
 	return invoices, rows.Err()
 }
 
-func GetInvoiceData(invoiceID int) (*InvoiceData, error) {
-	var data InvoiceData
+func GetInvoiceData(invoiceID int) (*models.InvoiceData, error) {
+	var data models.InvoiceData
 
 	err := db.QueryRow(`
 		SELECT
@@ -156,7 +143,7 @@ func GetInvoiceData(invoiceID int) (*InvoiceData, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var item InvoiceItem
+		var item models.InvoiceItem
 		if err := rows.Scan(&item.ID, &item.InvoiceID, &item.ItemName, &item.Amount, &item.CostPerUnit); err != nil {
 			return nil, err
 		}

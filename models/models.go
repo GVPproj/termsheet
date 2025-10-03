@@ -36,3 +36,18 @@ type InvoiceItem struct {
 	Amount      float64
 	CostPerUnit float64
 }
+
+// InvoiceData contains complete invoice information including provider and client details
+type InvoiceData struct {
+	InvoiceID       int
+	DateCreated     time.Time
+	Paid            bool
+	ProviderName    string
+	ProviderAddress *string
+	ProviderEmail   *string
+	ProviderPhone   *string
+	ClientName      string
+	ClientAddress   *string
+	ClientEmail     *string
+	Items           []InvoiceItem
+}

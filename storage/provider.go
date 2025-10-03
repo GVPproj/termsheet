@@ -1,10 +1,11 @@
-package models
+package storage
 
 import (
 	"database/sql"
 	"errors"
 	"strings"
 
+	"github.com/GVPproj/termsheet/models"
 	"github.com/google/uuid"
 )
 
@@ -30,16 +31,16 @@ func CreateProvider(name string, address, email, phone *string) (string, error) 
 	return providerID, nil
 }
 
-func ListProviders() ([]Provider, error) {
+func ListProviders() ([]models.Provider, error) {
 	rows, err := db.Query("SELECT id, name, address, email, phone FROM provider")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var providers []Provider
+	var providers []models.Provider
 	for rows.Next() {
-		var p Provider
+		var p models.Provider
 		if err := rows.Scan(&p.ID, &p.Name, &p.Address, &p.Email, &p.Phone); err != nil {
 			return nil, err
 		}

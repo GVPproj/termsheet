@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/GVPproj/termsheet/models"
+	"github.com/GVPproj/termsheet/storage"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -28,7 +28,7 @@ var (
 // CreateProviderListForm creates a form for selecting or creating providers
 // If preserveIndex >= 0, it attempts to select the item at that index
 func CreateProviderListForm(selection *string, preserveIndex int) (*huh.Form, error) {
-	providers, err := models.ListProviders()
+	providers, err := storage.ListProviders()
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func DeleteSelectedProvider(providerID string) (int, error) {
 	}
 
 	// Get current providers to find the index before deletion
-	providers, err := models.ListProviders()
+	providers, err := storage.ListProviders()
 	if err != nil {
 		return -1, err
 	}
@@ -111,7 +111,7 @@ func DeleteSelectedProvider(providerID string) (int, error) {
 	}
 
 	// Delete the provider
-	if err := models.DeleteProvider(providerID); err != nil {
+	if err := storage.DeleteProvider(providerID); err != nil {
 		return -1, err
 	}
 
