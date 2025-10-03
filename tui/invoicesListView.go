@@ -1,4 +1,4 @@
-package views
+package tui
 
 func RenderInvoices() string {
 	return "invoices bb"

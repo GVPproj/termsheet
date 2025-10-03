@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/GVPproj/termsheet/models"
-	"github.com/GVPproj/termsheet/views/forms"
+	"github.com/GVPproj/termsheet/tui/forms"
 )
 
 // TestNewProviderFormWithDataIntegration tests the integration between models.Provider and forms

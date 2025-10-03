@@ -5,10 +5,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/GVPproj/termsheet/components/provider"
 	"github.com/GVPproj/termsheet/storage"
+	"github.com/GVPproj/termsheet/tui"
+	"github.com/GVPproj/termsheet/tui/components/provider"
 	"github.com/GVPproj/termsheet/types"
-	"github.com/GVPproj/termsheet/views"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 )
@@ -49,7 +49,7 @@ func (m *model) createMenuForm() *huh.Form {
 				// the user's selection, directly updating m.selection in your model struct.
 				Value(&m.selection),
 		),
-	).WithTheme(views.GetMenuTheme())
+	).WithTheme(tui.GetMenuTheme())
 }
 
 func initialModel() *model {
@@ -136,17 +136,17 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *model) View() string {
 	switch m.currentView {
 	case types.MenuView:
-		return views.RenderMenu(m.form)
+		return tui.RenderMenu(m.form)
 	case types.ProvidersListView:
-		return views.RenderProviders(m.form)
+		return tui.RenderProviders(m.form)
 	case types.ProviderCreateView:
-		return views.RenderProviders(m.form) // Reuse the same renderer with the form
+		return tui.RenderProviders(m.form) // Reuse the same renderer with the form
 	case types.ProviderEditView:
-		return views.RenderProviders(m.form) // Reuse the same renderer with the form
+		return tui.RenderProviders(m.form) // Reuse the same renderer with the form
 	case types.ClientsListView:
-		return views.RenderClients()
+		return tui.RenderClients()
 	case types.InvoicesListView:
-		return views.RenderInvoices()
+		return tui.RenderInvoices()
 	default:
 		return "View not implemented yet\n\nPress ESC to return to menu"
 	}
