@@ -5,8 +5,8 @@ import (
 
 	"github.com/GVPproj/termsheet/models"
 	"github.com/GVPproj/termsheet/storage"
-	"github.com/GVPproj/termsheet/tui"
 	"github.com/GVPproj/termsheet/tui/forms"
+	"github.com/GVPproj/termsheet/tui/views"
 	"github.com/GVPproj/termsheet/types"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
@@ -42,7 +42,7 @@ func NewComponent() *Component {
 // InitListView initializes the provider list view
 func (c *Component) InitListView() (*huh.Form, error) {
 	c.selection = ""
-	providerForm, err := tui.CreateProviderListForm(&c.selection, -1)
+	providerForm, err := views.CreateProviderListForm(&c.selection, -1)
 	if err != nil {
 		return nil, err
 	}
@@ -66,13 +66,13 @@ func (c *Component) handleListView(msg tea.Msg) (*ViewTransition, tea.Cmd) {
 	// Handle delete key before passing to form
 	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "d" {
 		if c.selection != "" && c.selection != "CREATE_NEW" {
-			preserveIndex, err := tui.DeleteSelectedProvider(c.selection)
+			preserveIndex, err := views.DeleteSelectedProvider(c.selection)
 			if err != nil {
 				log.Printf("Error deleting provider: %v", err)
 			} else {
 				// Refresh the provider list, preserving cursor position
 				c.selection = ""
-				providerForm, err := tui.CreateProviderListForm(&c.selection, preserveIndex)
+				providerForm, err := views.CreateProviderListForm(&c.selection, preserveIndex)
 				if err != nil {
 					log.Printf("Error refreshing provider list: %v", err)
 					return nil, nil
@@ -169,7 +169,7 @@ func (c *Component) handleFormView(msg tea.Msg, currentView types.View) (*ViewTr
 
 		// Return to provider list
 		c.selection = ""
-		providerForm, err := tui.CreateProviderListForm(&c.selection, -1)
+		providerForm, err := views.CreateProviderListForm(&c.selection, -1)
 		if err != nil {
 			log.Printf("Error creating provider form: %v", err)
 			return nil, nil

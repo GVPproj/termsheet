@@ -1,4 +1,4 @@
-package tui
+package views
 
 func RenderClients() string {
 	s := "CLIENTS VIEW\n\n"

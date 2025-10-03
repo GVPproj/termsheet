@@ -1,5 +1,5 @@
-// Package tui collects the various app state views in the Termsheet app
-package tui
+// Package views contains the various app state views in the Termsheet app
+package views
 
 import (
 	"strings"
