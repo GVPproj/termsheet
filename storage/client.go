@@ -76,3 +76,21 @@ func UpdateClient(clientID, name string, address, email *string) error {
 
 	return nil
 }
+
+func DeleteClient(clientID string) error {
+	result, err := db.Exec("DELETE FROM client WHERE id = ?", clientID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}

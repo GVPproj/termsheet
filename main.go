@@ -109,6 +109,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.form.Init()
 			case "Clients":
 				m.currentView = types.ClientsListView
+				clientForm, err := m.providerComponent.InitListView()
+				if err != nil {
+					log.Printf("Error creating provider form: %v", err)
+					return m, nil
+				}
+				m.form = clientForm
+				return m, m.form.Init()
 			case "Invoices":
 				m.currentView = types.InvoicesListView
 			}
@@ -144,7 +151,7 @@ func (m *model) View() string {
 	case types.ProviderCreateView, types.ProviderEditView:
 		return views.RenderProviders(m.form)
 	case types.ClientsListView:
-		return views.RenderClients()
+		return views.RenderClients(m.form)
 	case types.InvoicesListView:
 		return views.RenderInvoices()
 	default:

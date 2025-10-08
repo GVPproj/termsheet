@@ -11,6 +11,8 @@ const (
 	ProviderCreateView
 	ProviderEditView
 	ClientsListView
+	ClientCreateView
+	ClientEditView
 	InvoicesListView
 )
 
