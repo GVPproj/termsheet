@@ -31,6 +31,8 @@ var (
 	helpStyle = lipgloss.NewStyle().
 			Foreground(subtle).
 			MarginTop(1)
+	itemStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#98C379"))
 
 	// Container styling
 	containerStyle = lipgloss.NewStyle().

@@ -1,3 +1,4 @@
+// Package provider
 package provider
 
 import (
@@ -36,7 +37,7 @@ func NewController() *Controller {
 // InitListView initializes the provider list view
 func (c *Controller) InitListView() (*huh.Form, error) {
 	c.selection = ""
-	providerForm, err := views.CreateProviderListForm(&c.selection, -1)
+	providerForm, err := views.CreateProviderListForm(&c.selection)
 	if err != nil {
 		return nil, err
 	}
@@ -60,20 +61,15 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 	// Handle delete key before passing to form
 	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "d" {
 		if c.selection != "" && c.selection != "CREATE_NEW" {
-			preserveIndex, err := views.DeleteSelectedProvider(c.selection)
+			// Refresh the provider list, preserving cursor position
+			c.selection = ""
+			providerForm, err := views.CreateProviderListForm(&c.selection)
 			if err != nil {
-				log.Printf("Error deleting provider: %v", err)
-			} else {
-				// Refresh the provider list, preserving cursor position
-				c.selection = ""
-				providerForm, err := views.CreateProviderListForm(&c.selection, preserveIndex)
-				if err != nil {
-					log.Printf("Error refreshing provider list: %v", err)
-					return nil, nil
-				}
-				c.form = providerForm
-				return nil, c.form.Init()
+				log.Printf("Error refreshing provider list: %v", err)
+				return nil, nil
 			}
+			c.form = providerForm
+			return nil, c.form.Init()
 		}
 	}
 
@@ -163,7 +159,7 @@ func (c *Controller) handleFormView(msg tea.Msg, currentView types.View) (*types
 
 		// Return to provider list
 		c.selection = ""
-		providerForm, err := views.CreateProviderListForm(&c.selection, -1)
+		providerForm, err := views.CreateProviderListForm(&c.selection)
 		if err != nil {
 			log.Printf("Error creating provider form: %v", err)
 			return nil, nil

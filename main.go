@@ -72,7 +72,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
-			return m, tea.Quit
+			if m.currentView == types.MenuView {
+				return m, tea.Quit
+			}
 		case "esc":
 			if m.currentView != types.MenuView {
 				// Reset form when returning to menu
