@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/GVPproj/termsheet/storage"
+	"github.com/GVPproj/termsheet/tui/components/client"
 	"github.com/GVPproj/termsheet/tui/components/provider"
 	"github.com/GVPproj/termsheet/tui/views"
 	"github.com/GVPproj/termsheet/types"
@@ -24,6 +25,8 @@ type model struct {
 
 	// Provider component
 	providerComponent *provider.Controller
+	// Client component
+	clientComponent *client.Controller
 }
 
 // createMenuForm is a method on the model struct
@@ -57,6 +60,7 @@ func initialModel() *model {
 		currentView:       types.MenuView,
 		choices:           []string{"Providers", "Clients", "Invoices"},
 		providerComponent: provider.NewController(),
+		clientComponent:   client.NewController(),
 	}
 
 	m.form = m.createMenuForm()
@@ -109,9 +113,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.form.Init()
 			case "Clients":
 				m.currentView = types.ClientsListView
-				clientForm, err := m.providerComponent.InitListView()
+				clientForm, err := m.clientComponent.InitListView()
 				if err != nil {
-					log.Printf("Error creating provider form: %v", err)
+					log.Printf("Error creating client form: %v", err)
 					return m, nil
 				}
 				m.form = clientForm
@@ -139,6 +143,21 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	}
 
+	// Delegate to client component for client-related views
+	if m.currentView == types.ClientsListView ||
+		m.currentView == types.ClientCreateView ||
+		m.currentView == types.ClientEditView {
+		transition, cmd := m.clientComponent.Update(msg, m.currentView)
+		if transition != nil {
+			m.currentView = transition.NewView
+			m.form = transition.Form
+			return m, cmd
+		}
+		// Update form reference from component
+		m.form = m.clientComponent.GetForm()
+		return m, cmd
+	}
+
 	return m, nil
 }
 
@@ -151,6 +170,8 @@ func (m *model) View() string {
 	case types.ProviderCreateView, types.ProviderEditView:
 		return views.RenderProviders(m.form)
 	case types.ClientsListView:
+		return views.RenderClients(m.form)
+	case types.ClientCreateView, types.ClientEditView:
 		return views.RenderClients(m.form)
 	case types.InvoicesListView:
 		return views.RenderInvoices()

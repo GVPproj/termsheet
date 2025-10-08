@@ -19,6 +19,7 @@ type Client struct {
 	Name    string
 	Address *string
 	Email   *string
+	Phone   *string
 }
 
 type Invoice struct {

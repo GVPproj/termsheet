@@ -61,7 +61,13 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 	// Handle delete key before passing to form
 	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "d" {
 		if c.selection != "" && c.selection != "CREATE_NEW" {
-			// Refresh the provider list, preserving cursor position
+			// Delete the provider
+			err := storage.DeleteProvider(c.selection)
+			if err != nil {
+				log.Printf("Error deleting provider: %v", err)
+				return nil, nil
+			}
+			// Refresh the provider list
 			c.selection = ""
 			providerForm, err := views.CreateProviderListForm(&c.selection)
 			if err != nil {

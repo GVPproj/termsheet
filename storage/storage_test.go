@@ -40,8 +40,9 @@ func TestCreateClient(t *testing.T) {
 
 	address := "123 Main St"
 	email := "test@example.com"
+	phone := "555-1111"
 
-	id, err := CreateClient("Acme Corp", &address, &email)
+	id, err := CreateClient("Acme Corp", &address, &email, &phone)
 	if err != nil {
 		t.Fatalf("CreateClient failed: %v", err)
 	}
@@ -68,7 +69,7 @@ func TestCreateClientEmptyName(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := CreateClient(tc.input, nil, nil)
+			_, err := CreateClient(tc.input, nil, nil, nil)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("CreateClient(%q) error = %v, wantErr %v", tc.input, err, tc.wantErr)
 			}
@@ -93,12 +94,13 @@ func TestListClients(t *testing.T) {
 	// Create test clients
 	address1 := "123 Main St"
 	email1 := "client1@example.com"
-	_, err = CreateClient("Client One", &address1, &email1)
+	phone1 := "555-0001"
+	_, err = CreateClient("Client One", &address1, &email1, &phone1)
 	if err != nil {
 		t.Fatalf("CreateClient failed: %v", err)
 	}
 
-	_, err = CreateClient("Client Two", nil, nil)
+	_, err = CreateClient("Client Two", nil, nil, nil)
 	if err != nil {
 		t.Fatalf("CreateClient failed: %v", err)
 	}
@@ -140,7 +142,7 @@ func TestUpdateClient(t *testing.T) {
 
 	// Create a client
 	address := "123 Main St"
-	id, err := CreateClient("Original Name", &address, nil)
+	id, err := CreateClient("Original Name", &address, nil, nil)
 	if err != nil {
 		t.Fatalf("CreateClient failed: %v", err)
 	}
@@ -148,7 +150,8 @@ func TestUpdateClient(t *testing.T) {
 	// Update the client
 	newAddress := "456 Elm St"
 	newEmail := "new@example.com"
-	err = UpdateClient(id, "Updated Name", &newAddress, &newEmail)
+	newPhone := "555-9999"
+	err = UpdateClient(id, "Updated Name", &newAddress, &newEmail, &newPhone)
 	if err != nil {
 		t.Fatalf("UpdateClient failed: %v", err)
 	}
@@ -175,7 +178,7 @@ func TestUpdateClientNonExistent(t *testing.T) {
 	setupTestDB(t)
 	defer teardownTestDB(t)
 
-	err := UpdateClient("non-existent-id", "Name", nil, nil)
+	err := UpdateClient("non-existent-id", "Name", nil, nil, nil)
 	if err != sql.ErrNoRows {
 		t.Errorf("expected sql.ErrNoRows, got %v", err)
 	}
@@ -186,16 +189,87 @@ func TestUpdateClientEmptyName(t *testing.T) {
 	setupTestDB(t)
 	defer teardownTestDB(t)
 
-	id, _ := CreateClient("Original", nil, nil)
+	id, _ := CreateClient("Original", nil, nil, nil)
 
-	err := UpdateClient(id, "", nil, nil)
+	err := UpdateClient(id, "", nil, nil, nil)
 	if err == nil {
 		t.Error("expected error for empty name")
 	}
 
-	err = UpdateClient(id, "   ", nil, nil)
+	err = UpdateClient(id, "   ", nil, nil, nil)
 	if err == nil {
 		t.Error("expected error for whitespace-only name")
+	}
+}
+
+// TestDeleteClient tests deleting a client
+func TestDeleteClient(t *testing.T) {
+	setupTestDB(t)
+	defer teardownTestDB(t)
+
+	// Create a client
+	id, err := CreateClient("Test Client", nil, nil, nil)
+	if err != nil {
+		t.Fatalf("CreateClient failed: %v", err)
+	}
+
+	// Delete the client
+	err = DeleteClient(id)
+	if err != nil {
+		t.Fatalf("DeleteClient failed: %v", err)
+	}
+
+	// Verify deletion
+	clients, _ := ListClients()
+	if len(clients) != 0 {
+		t.Errorf("expected 0 clients after deletion, got %d", len(clients))
+	}
+}
+
+// TestDeleteClientNonExistent tests deleting a non-existent client
+func TestDeleteClientNonExistent(t *testing.T) {
+	setupTestDB(t)
+	defer teardownTestDB(t)
+
+	err := DeleteClient("non-existent-id")
+	if err != sql.ErrNoRows {
+		t.Errorf("expected sql.ErrNoRows, got %v", err)
+	}
+}
+
+// TestDeleteClientMultiple tests deleting one client leaves others intact
+func TestDeleteClientMultiple(t *testing.T) {
+	setupTestDB(t)
+	defer teardownTestDB(t)
+
+	// Create multiple clients
+	id1, _ := CreateClient("Client One", nil, nil, nil)
+	id2, _ := CreateClient("Client Two", nil, nil, nil)
+	_, _ = CreateClient("Client Three", nil, nil, nil)
+
+	// Delete one client
+	err := DeleteClient(id2)
+	if err != nil {
+		t.Fatalf("DeleteClient failed: %v", err)
+	}
+
+	// Verify only the specified client was deleted
+	clients, _ := ListClients()
+	if len(clients) != 2 {
+		t.Fatalf("expected 2 clients, got %d", len(clients))
+	}
+
+	// Verify the remaining clients are correct
+	foundIDs := make(map[string]bool)
+	for _, c := range clients {
+		foundIDs[c.ID] = true
+	}
+
+	if !foundIDs[id1] {
+		t.Error("expected Client One to still exist")
+	}
+	if foundIDs[id2] {
+		t.Error("expected Client Two to be deleted")
 	}
 }
 
@@ -318,7 +392,7 @@ func TestCreateInvoice(t *testing.T) {
 
 	// Create provider and client first
 	providerID, _ := CreateProvider("Test Provider", nil, nil, nil)
-	clientID, _ := CreateClient("Test Client", nil, nil)
+	clientID, _ := CreateClient("Test Client", nil, nil, nil)
 
 	invoiceID, err := CreateInvoice(providerID, clientID, false)
 	if err != nil {
@@ -337,7 +411,7 @@ func TestUpdateInvoice(t *testing.T) {
 
 	// Setup
 	providerID, _ := CreateProvider("Provider", nil, nil, nil)
-	clientID, _ := CreateClient("Client", nil, nil)
+	clientID, _ := CreateClient("Client", nil, nil, nil)
 	invoiceID, _ := CreateInvoice(providerID, clientID, false)
 
 	// Update
@@ -384,7 +458,7 @@ func TestListInvoices(t *testing.T) {
 
 	// Create test data
 	providerID, _ := CreateProvider("Test Provider", nil, nil, nil)
-	clientID, _ := CreateClient("Test Client", nil, nil)
+	clientID, _ := CreateClient("Test Client", nil, nil, nil)
 	_, err = CreateInvoice(providerID, clientID, false)
 	if err != nil {
 		t.Fatalf("CreateInvoice failed: %v", err)
@@ -415,7 +489,7 @@ func TestAddInvoiceItem(t *testing.T) {
 
 	// Setup
 	providerID, _ := CreateProvider("Provider", nil, nil, nil)
-	clientID, _ := CreateClient("Client", nil, nil)
+	clientID, _ := CreateClient("Client", nil, nil, nil)
 	invoiceID, _ := CreateInvoice(providerID, clientID, false)
 
 	// Add item
@@ -435,7 +509,7 @@ func TestAddInvoiceItemValidation(t *testing.T) {
 	defer teardownTestDB(t)
 
 	providerID, _ := CreateProvider("Provider", nil, nil, nil)
-	clientID, _ := CreateClient("Client", nil, nil)
+	clientID, _ := CreateClient("Client", nil, nil, nil)
 	invoiceID, _ := CreateInvoice(providerID, clientID, false)
 
 	testCases := []struct {
@@ -477,7 +551,8 @@ func TestGetInvoiceData(t *testing.T) {
 
 	clientAddress := "456 Client Ave"
 	clientEmail := "client@test.com"
-	clientID, _ := CreateClient("My Client", &clientAddress, &clientEmail)
+	clientPhone := "555-2222"
+	clientID, _ := CreateClient("My Client", &clientAddress, &clientEmail, &clientPhone)
 
 	invoiceID, _ := CreateInvoice(providerID, clientID, true)
 

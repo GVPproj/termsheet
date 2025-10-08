@@ -7,17 +7,17 @@ import (
 	"github.com/charmbracelet/huh"
 )
 
-// NewProviderForm creates a new form for provider input
+// NewClientForm creates a new form for client input
 // Takes pointers to string variables that will be bound to form fields
-func NewClientForm(name, address, email *string) *huh.Form {
+func NewClientForm(name, address, email, phone *string) *huh.Form {
 	return huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
-				Title("Provider Name").
+				Title("Client Name").
 				Value(name).
 				Validate(func(s string) error {
 					if s == "" {
-						return errors.New("provider name is required")
+						return errors.New("client name is required")
 					}
 					return nil
 				}),
@@ -27,13 +27,16 @@ func NewClientForm(name, address, email *string) *huh.Form {
 			huh.NewInput().
 				Title("Email").
 				Value(email),
+			huh.NewInput().
+				Title("Phone").
+				Value(phone),
 		),
 	)
 }
 
-// NewProviderFormWithData creates a form pre-populated with existing provider data
-// Useful for editing an existing provider
-func NewClientFormWithData(client models.Client, name, address, email *string) *huh.Form {
+// NewClientFormWithData creates a form pre-populated with existing client data
+// Useful for editing an existing client
+func NewClientFormWithData(client models.Client, name, address, email, phone *string) *huh.Form {
 	// Pre-populate the bound variables with existing data
 	*name = client.Name
 
@@ -50,5 +53,11 @@ func NewClientFormWithData(client models.Client, name, address, email *string) *
 		*email = ""
 	}
 
-	return NewClientForm(name, address, email)
+	if client.Phone != nil {
+		*phone = *client.Phone
+	} else {
+		*phone = ""
+	}
+
+	return NewClientForm(name, address, email, phone)
 }

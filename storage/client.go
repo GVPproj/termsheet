@@ -1,96 +1,37 @@
 package storage
 
 import (
-	"database/sql"
-	"errors"
-	"strings"
-
 	"github.com/GVPproj/termsheet/models"
-	"github.com/google/uuid"
 )
 
-func CreateClient(name string, address, email *string) (string, error) {
-	if strings.TrimSpace(name) == "" {
-		return "", errors.New("client name is required")
-	}
-
-	clientID := uuid.New().String()
-
-	_, err := db.Exec(
-		"INSERT INTO client (id, name, address, email) VALUES (?, ?, ?, ?)",
-		clientID,
-		strings.TrimSpace(name),
-		address,
-		email,
-	)
-	if err != nil {
-		return "", err
-	}
-
-	return clientID, nil
+func CreateClient(name string, address, email, phone *string) (string, error) {
+	return CreateEntity("client", name, address, email, phone)
 }
 
 func ListClients() ([]models.Client, error) {
-	rows, err := db.Query("SELECT id, name, address, email FROM client")
+	entities, err := ListEntities("client")
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var clients []models.Client
-	for rows.Next() {
-		var c models.Client
-		if err := rows.Scan(&c.ID, &c.Name, &c.Address, &c.Email); err != nil {
-			return nil, err
+	clients := make([]models.Client, len(entities))
+	for i, e := range entities {
+		clients[i] = models.Client{
+			ID:      e.ID,
+			Name:    e.Name,
+			Address: e.Address,
+			Email:   e.Email,
+			Phone:   e.Phone,
 		}
-		clients = append(clients, c)
 	}
 
-	return clients, rows.Err()
+	return clients, nil
 }
 
-func UpdateClient(clientID, name string, address, email *string) error {
-	if strings.TrimSpace(name) == "" {
-		return errors.New("client name is required")
-	}
-
-	result, err := db.Exec(
-		"UPDATE client SET name = ?, address = ?, email = ? WHERE id = ?",
-		strings.TrimSpace(name),
-		address,
-		email,
-		clientID,
-	)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return sql.ErrNoRows
-	}
-
-	return nil
+func UpdateClient(clientID, name string, address, email, phone *string) error {
+	return UpdateEntity("client", clientID, name, address, email, phone)
 }
 
 func DeleteClient(clientID string) error {
-	result, err := db.Exec("DELETE FROM client WHERE id = ?", clientID)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return sql.ErrNoRows
-	}
-
-	return nil
+	return DeleteEntity("client", clientID)
 }

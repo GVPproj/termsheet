@@ -47,7 +47,8 @@ func createTables() error {
 			id TEXT PRIMARY KEY,
 			name TEXT NOT NULL,
 			address TEXT,
-			email TEXT
+			email TEXT,
+			phone TEXT
 		)`,
 		`CREATE TABLE IF NOT EXISTS invoice (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,

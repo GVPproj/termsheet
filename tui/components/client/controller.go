@@ -23,6 +23,7 @@ type Controller struct {
 	name    string
 	address string
 	email   string
+	phone   string
 
 	// Edit state
 	selectedID string
@@ -60,7 +61,13 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 	// Handle delete key before passing to form
 	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "d" {
 		if c.selection != "" && c.selection != "CREATE_NEW" {
-			// Refresh the client list, preserving cursor position
+			// Delete the client
+			err := storage.DeleteClient(c.selection)
+			if err != nil {
+				log.Printf("Error deleting client: %v", err)
+				return nil, nil
+			}
+			// Refresh the client list
 			c.selection = ""
 			clientListForm, err := views.CreateClientListForm(&c.selection)
 			if err != nil {
@@ -83,7 +90,7 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 		if c.selection == "CREATE_NEW" {
 			// Navigate to create client view
 			c.resetFormFields()
-			c.form = forms.NewClientForm(&c.name, &c.address, &c.email)
+			c.form = forms.NewClientForm(&c.name, &c.address, &c.email, &c.phone)
 			return &types.ViewTransition{
 				NewView: types.ClientCreateView,
 				Form:    c.form,
@@ -108,7 +115,7 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				log.Printf("Client not found: %s", c.selectedID)
 				return nil, nil
 			}
-			c.form = forms.NewClientFormWithData(*selectedClient, &c.name, &c.address, &c.email)
+			c.form = forms.NewClientFormWithData(*selectedClient, &c.name, &c.address, &c.email, &c.phone)
 			return &types.ViewTransition{
 				NewView: types.ClientEditView,
 				Form:    c.form,
@@ -131,22 +138,25 @@ func (c *Controller) handleFormView(msg tea.Msg, currentView types.View) (*types
 	if c.form.State == huh.StateCompleted {
 		// Handle client creation/update
 		// Convert empty strings to nil pointers, otherwise return pointer to value
-		var addressPtr, emailPtr *string
+		var addressPtr, emailPtr, phonePtr *string
 		if c.address != "" {
 			addressPtr = &c.address
 		}
 		if c.email != "" {
 			emailPtr = &c.email
 		}
+		if c.phone != "" {
+			phonePtr = &c.phone
+		}
 
 		if currentView == types.ClientCreateView {
-			_, err := storage.CreateClient(c.name, addressPtr, emailPtr)
+			_, err := storage.CreateClient(c.name, addressPtr, emailPtr, phonePtr)
 			if err != nil {
 				log.Printf("Error creating client: %v", err)
 				return nil, nil
 			}
 		} else {
-			err := storage.UpdateClient(c.selectedID, c.name, addressPtr, emailPtr)
+			err := storage.UpdateClient(c.selectedID, c.name, addressPtr, emailPtr, phonePtr)
 			if err != nil {
 				log.Printf("Error updating client: %v", err)
 				return nil, nil
@@ -175,6 +185,7 @@ func (c *Controller) resetFormFields() {
 	c.name = ""
 	c.address = ""
 	c.email = ""
+	c.phone = ""
 }
 
 // GetForm returns the current form

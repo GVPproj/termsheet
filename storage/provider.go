@@ -1,98 +1,37 @@
 package storage
 
 import (
-	"database/sql"
-	"errors"
-	"strings"
-
 	"github.com/GVPproj/termsheet/models"
-	"github.com/google/uuid"
 )
 
 func CreateProvider(name string, address, email, phone *string) (string, error) {
-	if strings.TrimSpace(name) == "" {
-		return "", errors.New("provider name is required")
-	}
-
-	providerID := uuid.New().String()
-
-	_, err := db.Exec(
-		"INSERT INTO provider (id, name, address, email, phone) VALUES (?, ?, ?, ?, ?)",
-		providerID,
-		strings.TrimSpace(name),
-		address,
-		email,
-		phone,
-	)
-	if err != nil {
-		return "", err
-	}
-
-	return providerID, nil
+	return CreateEntity("provider", name, address, email, phone)
 }
 
 func ListProviders() ([]models.Provider, error) {
-	rows, err := db.Query("SELECT id, name, address, email, phone FROM provider")
+	entities, err := ListEntities("provider")
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var providers []models.Provider
-	for rows.Next() {
-		var p models.Provider
-		if err := rows.Scan(&p.ID, &p.Name, &p.Address, &p.Email, &p.Phone); err != nil {
-			return nil, err
+	providers := make([]models.Provider, len(entities))
+	for i, e := range entities {
+		providers[i] = models.Provider{
+			ID:      e.ID,
+			Name:    e.Name,
+			Address: e.Address,
+			Email:   e.Email,
+			Phone:   e.Phone,
 		}
-		providers = append(providers, p)
 	}
 
-	return providers, rows.Err()
+	return providers, nil
 }
 
 func UpdateProvider(providerID, name string, address, email, phone *string) error {
-	if strings.TrimSpace(name) == "" {
-		return errors.New("provider name is required")
-	}
-
-	result, err := db.Exec(
-		"UPDATE provider SET name = ?, address = ?, email = ?, phone = ? WHERE id = ?",
-		strings.TrimSpace(name),
-		address,
-		email,
-		phone,
-		providerID,
-	)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return sql.ErrNoRows
-	}
-
-	return nil
+	return UpdateEntity("provider", providerID, name, address, email, phone)
 }
 
 func DeleteProvider(providerID string) error {
-	result, err := db.Exec("DELETE FROM provider WHERE id = ?", providerID)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return sql.ErrNoRows
-	}
-
-	return nil
+	return DeleteEntity("provider", providerID)
 }
