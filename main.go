@@ -7,6 +7,7 @@ import (
 
 	"github.com/GVPproj/termsheet/storage"
 	"github.com/GVPproj/termsheet/tui/components/client"
+	"github.com/GVPproj/termsheet/tui/components/invoice"
 	"github.com/GVPproj/termsheet/tui/components/provider"
 	"github.com/GVPproj/termsheet/tui/views"
 	"github.com/GVPproj/termsheet/types"
@@ -27,6 +28,8 @@ type model struct {
 	providerComponent *provider.Controller
 	// Client component
 	clientComponent *client.Controller
+	// Invoice component
+	invoiceComponent *invoice.Controller
 }
 
 // createMenuForm is a method on the model struct
@@ -61,6 +64,7 @@ func initialModel() *model {
 		choices:           []string{"Providers", "Clients", "Invoices"},
 		providerComponent: provider.NewController(),
 		clientComponent:   client.NewController(),
+		invoiceComponent:  invoice.NewController(),
 	}
 
 	m.form = m.createMenuForm()
@@ -122,6 +126,14 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.form.Init()
 			case "Invoices":
 				m.currentView = types.InvoicesListView
+				// Initialize invoice list form
+				invoiceForm, err := m.invoiceComponent.InitListView()
+				if err != nil {
+					log.Printf("Error creating invoice form: %v", err)
+					return m, nil
+				}
+				m.form = invoiceForm
+				return m, m.form.Init()
 			}
 		}
 
@@ -131,7 +143,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Delegate to provider component for provider-related views
 	if m.currentView == types.ProvidersListView ||
 		m.currentView == types.ProviderCreateView ||
-		m.currentView == types.ProviderEditView {
+		m.currentView == types.ProviderEditView ||
+		m.currentView == types.ProviderDeleteConfirmView {
 		transition, cmd := m.providerComponent.Update(msg, m.currentView)
 		if transition != nil {
 			m.currentView = transition.NewView
@@ -146,7 +159,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Delegate to client component for client-related views
 	if m.currentView == types.ClientsListView ||
 		m.currentView == types.ClientCreateView ||
-		m.currentView == types.ClientEditView {
+		m.currentView == types.ClientEditView ||
+		m.currentView == types.ClientDeleteConfirmView {
 		transition, cmd := m.clientComponent.Update(msg, m.currentView)
 		if transition != nil {
 			m.currentView = transition.NewView
@@ -155,6 +169,21 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		// Update form reference from component
 		m.form = m.clientComponent.GetForm()
+		return m, cmd
+	}
+
+	// Delegate to invoice component for invoice-related views
+	if m.currentView == types.InvoicesListView ||
+		m.currentView == types.InvoiceCreateView ||
+		m.currentView == types.InvoiceEditView {
+		transition, cmd := m.invoiceComponent.Update(msg, m.currentView)
+		if transition != nil {
+			m.currentView = transition.NewView
+			m.form = transition.Form
+			return m, cmd
+		}
+		// Update form reference from component
+		m.form = m.invoiceComponent.GetForm()
 		return m, cmd
 	}
 
@@ -169,12 +198,18 @@ func (m *model) View() string {
 		return views.RenderProviders(m.form)
 	case types.ProviderCreateView, types.ProviderEditView:
 		return views.RenderProviders(m.form)
+	case types.ProviderDeleteConfirmView:
+		return views.RenderDeleteConfirm(m.form)
 	case types.ClientsListView:
 		return views.RenderClients(m.form)
 	case types.ClientCreateView, types.ClientEditView:
 		return views.RenderClients(m.form)
+	case types.ClientDeleteConfirmView:
+		return views.RenderDeleteConfirm(m.form)
 	case types.InvoicesListView:
-		return views.RenderInvoices()
+		return views.RenderInvoices(m.form)
+	case types.InvoiceCreateView, types.InvoiceEditView:
+		return views.RenderInvoices(m.form)
 	default:
 		return "View not implemented yet\n\nPress ESC to return to menu"
 	}

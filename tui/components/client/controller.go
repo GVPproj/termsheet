@@ -27,6 +27,10 @@ type Controller struct {
 
 	// Edit state
 	selectedID string
+
+	// Delete confirmation
+	deleteConfirmed bool
+	deleteID        string
 }
 
 // NewController creates a new client controller
@@ -52,6 +56,8 @@ func (c *Controller) Update(msg tea.Msg, currentView types.View) (*types.ViewTra
 		return c.handleListView(msg)
 	case types.ClientCreateView, types.ClientEditView:
 		return c.handleFormView(msg, currentView)
+	case types.ClientDeleteConfirmView:
+		return c.handleDeleteConfirmView(msg)
 	}
 	return nil, nil
 }
@@ -61,21 +67,14 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 	// Handle delete key before passing to form
 	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "d" {
 		if c.selection != "" && c.selection != "CREATE_NEW" {
-			// Delete the client
-			err := storage.DeleteClient(c.selection)
-			if err != nil {
-				log.Printf("Error deleting client: %v", err)
-				return nil, nil
-			}
-			// Refresh the client list
-			c.selection = ""
-			clientListForm, err := views.CreateClientListForm(&c.selection)
-			if err != nil {
-				log.Printf("Error refreshing client list: %v", err)
-				return nil, nil
-			}
-			c.form = clientListForm
-			return nil, c.form.Init()
+			// Show delete confirmation
+			c.deleteID = c.selection
+			c.deleteConfirmed = false
+			c.form = forms.NewDeleteConfirmForm(&c.deleteConfirmed)
+			return &types.ViewTransition{
+				NewView: types.ClientDeleteConfirmView,
+				Form:    c.form,
+			}, c.form.Init()
 		}
 	}
 
@@ -121,6 +120,45 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				Form:    c.form,
 			}, c.form.Init()
 		}
+	}
+
+	return nil, cmd
+}
+
+// handleDeleteConfirmView manages the delete confirmation view
+func (c *Controller) handleDeleteConfirmView(msg tea.Msg) (*types.ViewTransition, tea.Cmd) {
+	// Update form
+	form, cmd := c.form.Update(msg)
+	if f, ok := form.(*huh.Form); ok {
+		c.form = f
+	}
+
+	// Check if form is completed
+	if c.form.State == huh.StateCompleted {
+		var errorMsg string
+		if c.deleteConfirmed {
+			// Delete the client
+			err := storage.DeleteClient(c.deleteID)
+			if err != nil {
+				log.Printf("Error deleting client: %v", err)
+				errorMsg = err.Error()
+			}
+		}
+
+		// Refresh the client list
+		c.selection = ""
+		c.deleteID = ""
+		clientForm, err := views.CreateClientListFormWithError(&c.selection, errorMsg)
+		if err != nil {
+			log.Printf("Error refreshing client list: %v", err)
+			return nil, nil
+		}
+
+		c.form = clientForm
+		return &types.ViewTransition{
+			NewView: types.ClientsListView,
+			Form:    c.form,
+		}, c.form.Init()
 	}
 
 	return nil, cmd

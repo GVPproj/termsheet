@@ -10,10 +10,14 @@ const (
 	ProvidersListView
 	ProviderCreateView
 	ProviderEditView
+	ProviderDeleteConfirmView
 	ClientsListView
 	ClientCreateView
 	ClientEditView
+	ClientDeleteConfirmView
 	InvoicesListView
+	InvoiceCreateView
+	InvoiceEditView
 )
 
 // ViewTransition represents a request to change views

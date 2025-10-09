@@ -182,3 +182,46 @@ func AddInvoiceItem(invoiceID int, itemName string, amount, costPerUnit float64)
 
 	return int(itemID), nil
 }
+
+func DeleteInvoice(invoiceID int) error {
+	// First delete associated invoice items
+	_, err := db.Exec("DELETE FROM invoice_item WHERE invoice_id = ?", invoiceID)
+	if err != nil {
+		return err
+	}
+
+	// Then delete the invoice
+	result, err := db.Exec("DELETE FROM invoice WHERE id = ?", invoiceID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func DeleteInvoiceItem(itemID int) error {
+	result, err := db.Exec("DELETE FROM invoice_item WHERE id = ?", itemID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}

@@ -27,6 +27,10 @@ type Controller struct {
 
 	// Edit state
 	selectedID string
+
+	// Delete confirmation
+	deleteConfirmed bool
+	deleteID        string
 }
 
 // NewController creates a new provider controller
@@ -52,6 +56,8 @@ func (c *Controller) Update(msg tea.Msg, currentView types.View) (*types.ViewTra
 		return c.handleListView(msg)
 	case types.ProviderCreateView, types.ProviderEditView:
 		return c.handleFormView(msg, currentView)
+	case types.ProviderDeleteConfirmView:
+		return c.handleDeleteConfirmView(msg)
 	}
 	return nil, nil
 }
@@ -61,21 +67,14 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 	// Handle delete key before passing to form
 	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "d" {
 		if c.selection != "" && c.selection != "CREATE_NEW" {
-			// Delete the provider
-			err := storage.DeleteProvider(c.selection)
-			if err != nil {
-				log.Printf("Error deleting provider: %v", err)
-				return nil, nil
-			}
-			// Refresh the provider list
-			c.selection = ""
-			providerForm, err := views.CreateProviderListForm(&c.selection)
-			if err != nil {
-				log.Printf("Error refreshing provider list: %v", err)
-				return nil, nil
-			}
-			c.form = providerForm
-			return nil, c.form.Init()
+			// Show delete confirmation
+			c.deleteID = c.selection
+			c.deleteConfirmed = false
+			c.form = forms.NewDeleteConfirmForm(&c.deleteConfirmed)
+			return &types.ViewTransition{
+				NewView: types.ProviderDeleteConfirmView,
+				Form:    c.form,
+			}, c.form.Init()
 		}
 	}
 
@@ -121,6 +120,45 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				Form:    c.form,
 			}, c.form.Init()
 		}
+	}
+
+	return nil, cmd
+}
+
+// handleDeleteConfirmView manages the delete confirmation view
+func (c *Controller) handleDeleteConfirmView(msg tea.Msg) (*types.ViewTransition, tea.Cmd) {
+	// Update form
+	form, cmd := c.form.Update(msg)
+	if f, ok := form.(*huh.Form); ok {
+		c.form = f
+	}
+
+	// Check if form is completed
+	if c.form.State == huh.StateCompleted {
+		var errorMsg string
+		if c.deleteConfirmed {
+			// Delete the provider
+			err := storage.DeleteProvider(c.deleteID)
+			if err != nil {
+				log.Printf("Error deleting provider: %v", err)
+				errorMsg = err.Error()
+			}
+		}
+
+		// Refresh the provider list
+		c.selection = ""
+		c.deleteID = ""
+		providerForm, err := views.CreateProviderListFormWithError(&c.selection, errorMsg)
+		if err != nil {
+			log.Printf("Error refreshing provider list: %v", err)
+			return nil, nil
+		}
+
+		c.form = providerForm
+		return &types.ViewTransition{
+			NewView: types.ProvidersListView,
+			Form:    c.form,
+		}, c.form.Init()
 	}
 
 	return nil, cmd

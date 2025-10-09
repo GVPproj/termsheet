@@ -11,6 +11,11 @@ import (
 // CreateProviderListForm creates a form for selecting or creating providers
 // If preserveIndex >= 0, it attempts to select the item at that index
 func CreateProviderListForm(selection *string) (*huh.Form, error) {
+	return CreateProviderListFormWithError(selection, "")
+}
+
+// CreateProviderListFormWithError creates a form with an optional error message
+func CreateProviderListFormWithError(selection *string, errorMsg string) (*huh.Form, error) {
 	providers, err := storage.ListProviders()
 	if err != nil {
 		return nil, err
@@ -31,10 +36,15 @@ func CreateProviderListForm(selection *string) (*huh.Form, error) {
 	// Add "Create New Provider" option
 	options = append(options, huh.NewOption("+ Create New Provider", "CREATE_NEW"))
 
+	title := "Select a provider or create a new one"
+	if errorMsg != "" {
+		title = "⚠️  " + errorMsg + "\n\nSelect a provider or create a new one"
+	}
+
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewSelect[string]().
-				Title("Select a provider or create a new one").
+				Title(title).
 				Options(options...).
 				Value(selection),
 		),

@@ -87,8 +87,41 @@ func UpdateEntity(tableName, entityID, name string, address, email, phone *strin
 	return nil
 }
 
+// HasInvoiceReferences checks if an entity (client or provider) has any associated invoices
+func HasInvoiceReferences(tableName, entityID string) (bool, error) {
+	var columnName string
+	if tableName == "client" {
+		columnName = "client_id"
+	} else if tableName == "provider" {
+		columnName = "provider_id"
+	} else {
+		// For other entity types, no invoice check needed
+		return false, nil
+	}
+
+	var count int
+	err := db.QueryRow(
+		fmt.Sprintf("SELECT COUNT(*) FROM invoice WHERE %s = ?", columnName),
+		entityID,
+	).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 // DeleteEntity deletes an entity from the specified table
 func DeleteEntity(tableName, entityID string) error {
+	// Check for invoice references before deleting
+	hasRefs, err := HasInvoiceReferences(tableName, entityID)
+	if err != nil {
+		return err
+	}
+	if hasRefs {
+		return fmt.Errorf("cannot delete %s: it has associated invoices", tableName)
+	}
+
 	result, err := db.Exec(fmt.Sprintf("DELETE FROM %s WHERE id = ?", tableName), entityID)
 	if err != nil {
 		return err

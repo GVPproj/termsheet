@@ -59,3 +59,21 @@ func RenderMenu(form *huh.Form) string {
 	// Wrap in container
 	return containerStyle.Render(b.String())
 }
+
+// RenderDeleteConfirm renders the delete confirmation view
+func RenderDeleteConfirm(form *huh.Form) string {
+	var b strings.Builder
+
+	// Render title
+	b.WriteString(titleStyle.Render("Delete Confirmation"))
+	b.WriteString("\n\n")
+
+	// Render the form
+	b.WriteString(form.View())
+
+	// Render help text
+	b.WriteString(helpStyle.Render("\n\nESC to cancel"))
+
+	// Wrap in container
+	return containerStyle.Render(b.String())
+}
