@@ -111,7 +111,7 @@ func GetInvoiceData(invoiceID int) (*models.InvoiceData, error) {
 			i.date_created,
 			i.paid,
 			p.name, p.address, p.email, p.phone,
-			c.name, c.address, c.email
+			c.name, c.address, c.email, c.phone
 		FROM invoice i
 		LEFT JOIN provider p ON i.provider_id = p.id
 		LEFT JOIN client c ON i.client_id = c.id
@@ -120,13 +120,14 @@ func GetInvoiceData(invoiceID int) (*models.InvoiceData, error) {
 		&data.InvoiceID,
 		&data.DateCreated,
 		&data.Paid,
-		&data.ProviderName,
-		&data.ProviderAddress,
-		&data.ProviderEmail,
-		&data.ProviderPhone,
-		&data.ClientName,
-		&data.ClientAddress,
-		&data.ClientEmail,
+		&data.Provider.Name,
+		&data.Provider.Address,
+		&data.Provider.Email,
+		&data.Provider.Phone,
+		&data.Client.Name,
+		&data.Client.Address,
+		&data.Client.Email,
+		&data.Client.Phone,
 	)
 	if err != nil {
 		return nil, err

@@ -573,11 +573,11 @@ func TestGetInvoiceData(t *testing.T) {
 	if !data.Paid {
 		t.Error("expected invoice to be paid")
 	}
-	if data.ProviderName != "My Provider" {
-		t.Errorf("expected provider name 'My Provider', got %q", data.ProviderName)
+	if data.Provider.Name != "My Provider" {
+		t.Errorf("expected provider name 'My Provider', got %q", data.Provider.Name)
 	}
-	if data.ClientName != "My Client" {
-		t.Errorf("expected client name 'My Client', got %q", data.ClientName)
+	if data.Client.Name != "My Client" {
+		t.Errorf("expected client name 'My Client', got %q", data.Client.Name)
 	}
 
 	// Verify items

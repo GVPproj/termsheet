@@ -177,7 +177,7 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				return nil, nil
 			}
 			for _, p := range providers {
-				if p.Name == invoiceData.ProviderName {
+				if p.Name == invoiceData.Provider.Name {
 					invoice.ProviderID = p.ID
 					break
 				}
@@ -189,7 +189,7 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				return nil, nil
 			}
 			for _, cl := range clients {
-				if cl.Name == invoiceData.ClientName {
+				if cl.Name == invoiceData.Client.Name {
 					invoice.ClientID = cl.ID
 					break
 				}
