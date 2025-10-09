@@ -15,7 +15,7 @@ func TestNewClientFormWithDataIntegration(t *testing.T) {
 	em := "contact@client.com"
 	ph := "555-8888"
 
-	client := models.Client{
+	client := models.Entity{
 		Name:    "Existing Client",
 		Address: &addr,
 		Email:   &em,
@@ -46,7 +46,7 @@ func TestNewClientFormWithDataIntegration(t *testing.T) {
 
 // TestNewClientFormWithDataNilFieldsIntegration tests the form with a minimal client
 func TestNewClientFormWithDataNilFieldsIntegration(t *testing.T) {
-	client := models.Client{
+	client := models.Entity{
 		Name:    "Minimal Client",
 		Address: nil,
 		Email:   nil,
@@ -79,7 +79,7 @@ func TestNewClientFormWithDataNilFieldsIntegration(t *testing.T) {
 func TestNewClientFormWithDataMixedFields(t *testing.T) {
 	addr := "999 Mixed St"
 
-	client := models.Client{
+	client := models.Entity{
 		Name:    "Partial Client",
 		Address: &addr,
 		Email:   nil,

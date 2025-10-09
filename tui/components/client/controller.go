@@ -104,7 +104,7 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				log.Printf("Error loading client: %v", err)
 				return nil, nil
 			}
-			var selectedClient *models.Client
+			var selectedClient *models.Entity
 			for _, p := range clients {
 				if p.ID == c.selectedID {
 					selectedClient = &p

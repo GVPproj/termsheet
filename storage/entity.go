@@ -6,19 +6,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GVPproj/termsheet/models"
 	"github.com/google/uuid"
 )
 
-// Entity represents a generic contact entity (client or provider)
-type Entity struct {
-	ID      string
-	Name    string
-	Address *string
-	Email   *string
-	Phone   *string
-}
-
 // CreateEntity creates a new entity in the specified table
+// In Go, we use string pointers (*string) for optional fields to distinguish between three states:
+// 1. Field not provided - pointer is nil
+// 2. Field provided but empty - pointer points to an empty string ""
+// 3. Field has a value - pointer points to the actual string value
 func CreateEntity(tableName, name string, address, email, phone *string) (string, error) {
 	if strings.TrimSpace(name) == "" {
 		return "", fmt.Errorf("%s name is required", tableName)
@@ -42,16 +38,16 @@ func CreateEntity(tableName, name string, address, email, phone *string) (string
 }
 
 // ListEntities retrieves all entities from the specified table
-func ListEntities(tableName string) ([]Entity, error) {
+func ListEntities(tableName string) ([]models.Entity, error) {
 	rows, err := db.Query(fmt.Sprintf("SELECT id, name, address, email, phone FROM %s", tableName))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var entities []Entity
+	var entities []models.Entity
 	for rows.Next() {
-		var e Entity
+		var e models.Entity
 		if err := rows.Scan(&e.ID, &e.Name, &e.Address, &e.Email, &e.Phone); err != nil {
 			return nil, err
 		}
@@ -108,23 +104,6 @@ func DeleteEntity(tableName, entityID string) error {
 	}
 
 	return nil
-}
-
-// EntityToClient converts a generic Entity to a Client model
-func EntityToClient(e Entity) interface{} {
-	return struct {
-		ID      string
-		Name    string
-		Address *string
-		Email   *string
-		Phone   *string
-	}{
-		ID:      e.ID,
-		Name:    e.Name,
-		Address: e.Address,
-		Email:   e.Email,
-		Phone:   e.Phone,
-	}
 }
 
 // ValidateEntityName validates that an entity name is not empty

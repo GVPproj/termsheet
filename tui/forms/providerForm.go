@@ -36,7 +36,7 @@ func NewProviderForm(name, address, email, phone *string) *huh.Form {
 
 // NewProviderFormWithData creates a form pre-populated with existing provider data
 // Useful for editing an existing provider
-func NewProviderFormWithData(provider models.Provider, name, address, email, phone *string) *huh.Form {
+func NewProviderFormWithData(provider models.Entity, name, address, email, phone *string) *huh.Form {
 	// Pre-populate the bound variables with existing data
 	*name = provider.Name
 

@@ -15,7 +15,7 @@ func TestNewProviderFormWithDataIntegration(t *testing.T) {
 	em := "contact@business.com"
 	ph := "555-9999"
 
-	provider := models.Provider{
+	provider := models.Entity{
 		Name:    "Existing Provider",
 		Address: &addr,
 		Email:   &em,
@@ -46,7 +46,7 @@ func TestNewProviderFormWithDataIntegration(t *testing.T) {
 
 // TestNewProviderFormWithDataNilFieldsIntegration tests the form with a minimal provider
 func TestNewProviderFormWithDataNilFieldsIntegration(t *testing.T) {
-	provider := models.Provider{
+	provider := models.Entity{
 		Name:    "Minimal Provider",
 		Address: nil,
 		Email:   nil,

@@ -104,7 +104,7 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				log.Printf("Error loading provider: %v", err)
 				return nil, nil
 			}
-			var selectedProvider *models.Provider
+			var selectedProvider *models.Entity
 			for _, p := range providers {
 				if p.ID == c.selectedID {
 					selectedProvider = &p

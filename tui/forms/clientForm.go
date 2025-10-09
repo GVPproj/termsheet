@@ -36,7 +36,7 @@ func NewClientForm(name, address, email, phone *string) *huh.Form {
 
 // NewClientFormWithData creates a form pre-populated with existing client data
 // Useful for editing an existing client
-func NewClientFormWithData(client models.Client, name, address, email, phone *string) *huh.Form {
+func NewClientFormWithData(client models.Entity, name, address, email, phone *string) *huh.Form {
 	// Pre-populate the bound variables with existing data
 	*name = client.Name
 
