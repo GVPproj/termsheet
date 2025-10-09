@@ -9,7 +9,6 @@ import (
 )
 
 // CreateClientListForm creates a form for selecting or creating providers
-// If preserveIndex >= 0, it attempts to select the item at that index
 func CreateClientListForm(selection *string) (*huh.Form, error) {
 	return CreateClientListFormWithError(selection, "")
 }
