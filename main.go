@@ -174,6 +174,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Delegate to invoice component for invoice-related views
 	if m.currentView == types.InvoicesListView ||
+		m.currentView == types.InvoiceActionMenuView ||
+		m.currentView == types.InvoiceViewView ||
 		m.currentView == types.InvoiceCreateView ||
 		m.currentView == types.InvoiceEditView {
 		transition, cmd := m.invoiceComponent.Update(msg, m.currentView)
@@ -208,6 +210,14 @@ func (m *model) View() string {
 		return views.RenderDeleteConfirm(m.form)
 	case types.InvoicesListView:
 		return views.RenderInvoices(m.form)
+	case types.InvoiceActionMenuView:
+		return views.RenderInvoiceActionMenu(m.form)
+	case types.InvoiceViewView:
+		invoiceData := m.invoiceComponent.GetInvoiceData()
+		if invoiceData == nil {
+			return "Error: No invoice data available\n\nPress ESC to return"
+		}
+		return views.RenderInvoiceView(invoiceData)
 	case types.InvoiceCreateView, types.InvoiceEditView:
 		return views.RenderInvoices(m.form)
 	default:

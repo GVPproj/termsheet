@@ -16,6 +16,8 @@ const (
 	ClientEditView
 	ClientDeleteConfirmView
 	InvoicesListView
+	InvoiceActionMenuView
+	InvoiceViewView
 	InvoiceCreateView
 	InvoiceEditView
 )

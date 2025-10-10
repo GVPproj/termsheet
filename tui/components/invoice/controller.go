@@ -58,6 +58,10 @@ type Controller struct {
 	existingItems []models.InvoiceItem
 	isEditMode    bool
 	currentItemIndex int
+
+	// Action menu state
+	actionSelection string
+	invoiceData     *models.InvoiceData
 }
 
 // NewController creates a new invoice controller
@@ -81,6 +85,10 @@ func (c *Controller) Update(msg tea.Msg, currentView types.View) (*types.ViewTra
 	switch currentView {
 	case types.InvoicesListView:
 		return c.handleListView(msg)
+	case types.InvoiceActionMenuView:
+		return c.handleActionMenuView(msg)
+	case types.InvoiceViewView:
+		return c.handleInvoiceDisplayView(msg)
 	case types.InvoiceCreateView, types.InvoiceEditView:
 		return c.handleFormView(msg, currentView)
 	}
@@ -143,7 +151,7 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				Form:    c.form,
 			}, c.form.Init()
 		} else {
-			// Navigate to edit invoice view
+			// Navigate to action menu
 			c.selectedID = c.selection
 
 			// Parse invoice ID
@@ -155,30 +163,58 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 			}
 			c.invoiceID = invoiceID
 
-			// Get invoice data
+			// Get invoice data for later use
 			invoiceData, err := storage.GetInvoiceData(invoiceID)
 			if err != nil {
 				log.Printf("Error loading invoice: %v", err)
 				return nil, nil
 			}
+			c.invoiceData = invoiceData
 
-			// Create Invoice model from InvoiceData
-			invoice := models.Invoice{
-				ID:         invoiceData.InvoiceID,
-				ProviderID: "", // We'll need to fetch this separately
-				ClientID:   "", // We'll need to fetch this separately
-				Paid:       invoiceData.Paid,
-			}
+			// Create action menu form
+			c.actionSelection = ""
+			actionForm := views.CreateInvoiceActionForm(&c.actionSelection)
+			c.form = actionForm
+			return &types.ViewTransition{
+				NewView: types.InvoiceActionMenuView,
+				Form:    c.form,
+			}, c.form.Init()
+		}
+	}
 
+	return nil, cmd
+}
+
+// handleActionMenuView manages the invoice action menu
+func (c *Controller) handleActionMenuView(msg tea.Msg) (*types.ViewTransition, tea.Cmd) {
+	// Update form
+	form, cmd := c.form.Update(msg)
+	if f, ok := form.(*huh.Form); ok {
+		c.form = f
+	}
+
+	// Check if form is completed
+	if c.form.State == huh.StateCompleted {
+		switch views.InvoiceActionOption(c.actionSelection) {
+		case views.ActionView:
+			// Navigate to invoice view
+			return &types.ViewTransition{
+				NewView: types.InvoiceViewView,
+				Form:    nil,
+			}, nil
+
+		case views.ActionEdit:
+			// Navigate to edit invoice view
 			// Get provider and client IDs by name
 			providers, err := storage.ListProviders()
 			if err != nil {
 				log.Printf("Error loading providers: %v", err)
 				return nil, nil
 			}
+			var providerID string
 			for _, p := range providers {
-				if p.Name == invoiceData.Provider.Name {
-					invoice.ProviderID = p.ID
+				if p.Name == c.invoiceData.Provider.Name {
+					providerID = p.ID
 					break
 				}
 			}
@@ -188,21 +224,24 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				log.Printf("Error loading clients: %v", err)
 				return nil, nil
 			}
+			var clientID string
 			for _, cl := range clients {
-				if cl.Name == invoiceData.Client.Name {
-					invoice.ClientID = cl.ID
+				if cl.Name == c.invoiceData.Client.Name {
+					clientID = cl.ID
 					break
 				}
 			}
 
-			c.existingItems = invoiceData.Items
+			c.existingItems = c.invoiceData.Items
 			c.isEditMode = true
 			c.currentStep = StepSelectProvider
 			c.currentItemIndex = 0
+			c.providerID = providerID
+			c.clientID = clientID
 
 			// Pre-load existing items into items slice
-			c.items = make([]InvoiceItem, 0, len(invoiceData.Items))
-			for _, item := range invoiceData.Items {
+			c.items = make([]InvoiceItem, 0, len(c.invoiceData.Items))
+			for _, item := range c.invoiceData.Items {
 				c.items = append(c.items, InvoiceItem{
 					Name:        item.ItemName,
 					Amount:      item.Amount,
@@ -210,7 +249,7 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				})
 			}
 
-			invoiceForm, err := forms.NewProviderSelectFormWithData(&c.providerID, invoice.ProviderID)
+			invoiceForm, err := forms.NewProviderSelectFormWithData(&c.providerID, providerID)
 			if err != nil {
 				log.Printf("Error creating invoice form: %v", err)
 				return nil, nil
@@ -220,10 +259,44 @@ func (c *Controller) handleListView(msg tea.Msg) (*types.ViewTransition, tea.Cmd
 				NewView: types.InvoiceEditView,
 				Form:    c.form,
 			}, c.form.Init()
+
+		case views.ActionPDF:
+			// PDF output not implemented yet - return to invoice list
+			c.selection = ""
+			invoiceForm, err := views.CreateInvoiceListForm(&c.selection)
+			if err != nil {
+				log.Printf("Error creating invoice form: %v", err)
+				return nil, nil
+			}
+			c.form = invoiceForm
+			return &types.ViewTransition{
+				NewView: types.InvoicesListView,
+				Form:    c.form,
+			}, c.form.Init()
 		}
 	}
 
 	return nil, cmd
+}
+
+// handleInvoiceDisplayView manages the read-only invoice display
+func (c *Controller) handleInvoiceDisplayView(msg tea.Msg) (*types.ViewTransition, tea.Cmd) {
+	// Check for ESC key to return to invoice list
+	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.Type == tea.KeyEsc {
+		c.selection = ""
+		invoiceForm, err := views.CreateInvoiceListForm(&c.selection)
+		if err != nil {
+			log.Printf("Error creating invoice form: %v", err)
+			return nil, nil
+		}
+		c.form = invoiceForm
+		return &types.ViewTransition{
+			NewView: types.InvoicesListView,
+			Form:    c.form,
+		}, c.form.Init()
+	}
+
+	return nil, nil
 }
 
 // handleFormView manages create and edit form views
@@ -450,4 +523,9 @@ func (c *Controller) resetFormFields() {
 // GetForm returns the current form
 func (c *Controller) GetForm() *huh.Form {
 	return c.form
+}
+
+// GetInvoiceData returns the current invoice data for display
+func (c *Controller) GetInvoiceData() *models.InvoiceData {
+	return c.invoiceData
 }
