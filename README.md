@@ -9,7 +9,6 @@ Theming Huh:
 
 ## Todos
 
-- create in-app invoice view, which displays first and offers user the chance to edit the invoice
 - further refactoring of component library
 - choose pdf library
 - output pdf file (basic)
