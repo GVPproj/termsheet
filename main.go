@@ -24,12 +24,9 @@ type model struct {
 	form      *huh.Form
 	selection string
 
-	// Provider component
 	providerComponent *provider.Controller
-	// Client component
-	clientComponent *client.Controller
-	// Invoice component
-	invoiceComponent *invoice.Controller
+	clientComponent   *client.Controller
+	invoiceComponent  *invoice.Controller
 }
 
 // createMenuForm is a method on the model struct
@@ -42,9 +39,9 @@ func (m *model) createMenuForm() *huh.Form {
 				Title("Please select a view").
 				// .Options() - Defines the selectable choices (label + value pairs)
 				Options(
-					huh.NewOption("Providers", "Providers"),
-					huh.NewOption("Clients", "Clients"),
-					huh.NewOption("Invoices", "Invoices"),
+					huh.NewOption("Providers - Who is invoicing?", "Providers"),
+					huh.NewOption("Clients - Who is paying?", "Clients"),
+					huh.NewOption("Invoices - Create, Edit, Track, Export", "Invoices"),
 				).
 				// .Value(&m.selection) - Binds the selected value to the m.selection field on the model struct
 				// using a pointer to that variable.
